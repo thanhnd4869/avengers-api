@@ -1,0 +1,60 @@
+{
+  "name": "avengers-api",
+  "version": "1.0.0",
+  "description": "Avengers API",
+  "keywords": [
+    "avengers",
+    "api"
+  ],
+  "homepage": "https://github.com/thanhnd4869/avengers-api#readme",
+  "bugs": {
+    "url": "https://github.com/thanhnd4869/avengers-api/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thanhnd4869/avengers-api.git"
+  },
+  "license": "MIT",
+  "author": "ThanhND",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=24.11.0 <25",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon",
+    "dev:server": "npm run lint && node src/index.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "commitlint": "commitlint",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml}": "prettier --write"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.6"
+  }
+}
