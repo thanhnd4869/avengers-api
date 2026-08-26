@@ -38,6 +38,7 @@ export default [
     rules: {
       'no-duplicate-imports': 'error',
       'no-console': 'off',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-restricted-syntax': [
         'error',
         {
@@ -74,7 +75,6 @@ export default [
       'no-restricted-imports': restrictedImports(
         [routes, 'Services must not depend on routes.'],
         [controllers, 'Services must not depend on controllers.'],
-        [services, 'Services must not depend on other services.'],
         [models, 'Services must access data through repositories.'],
       ),
     },

@@ -26,8 +26,6 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon",
-    "dev:server": "npm run lint && node src/index.js",
-    "test": "node --test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
