@@ -11,10 +11,6 @@ logs/
 *.log
 npm-debug.log*
 
-# Test coverage
-coverage/
-.nyc_output/
-
 # Runtime files
 *.pid
 *.pid.lock

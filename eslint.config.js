@@ -25,7 +25,7 @@ const models = ['**/models/**', './models/**', '../models/**']
 
 export default [
   {
-    ignores: ['coverage/**', 'node_modules/**'],
+    ignores: ['node_modules/**'],
   },
   eslint.configs.recommended,
   {
@@ -109,6 +109,17 @@ export default [
         [services, 'Validations must not contain business logic.'],
         [repositories, 'Validations must not access repositories.'],
         [models, 'Validations must not access models.'],
+      ),
+    },
+  },
+  {
+    files: ['src/middlewares/**/*.js'],
+    rules: {
+      'no-restricted-imports': restrictedImports(
+        [routes, 'Middlewares must not depend on routes.'],
+        [controllers, 'Middlewares must not depend on controllers.'],
+        [repositories, 'Middlewares must access data through services.'],
+        [models, 'Middlewares must not access models directly.'],
       ),
     },
   },

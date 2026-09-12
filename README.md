@@ -7,9 +7,22 @@ The API is written in plain JavaScript, uses Express and native ECMAScript
 modules, and runs on Node.js 24. The codebase follows a strict Layered
 Architecture organized by technical responsibility.
 
+## Database
+
+The API connects to MongoDB Atlas with Mongoose using the driver defaults. Atlas
+clusters are replica sets, so multi-document transactions are available without
+extra configuration, and the driver already retries transient network failures.
+
+The connection is opened before the HTTP server starts listening: if the cluster
+is unreachable the process exits instead of serving traffic in a broken state.
+On shutdown the connection is closed through the existing `onShutdown` hook, and
+`/health/ready` reports the connection through a short `ping`.
+
+Connection strings contain a password, so they are redacted from logs.
+
 ## Technology Stack
 
-- MongoDB for persistent data storage (planned)
+- MongoDB Atlas for persistent data storage
 - Express for the HTTP API
 - React for the separate frontend application
 - Node.js 24 for the backend runtime
@@ -46,18 +59,39 @@ The API is available at `http://localhost:8000` by default.
 
 ## Environment Variables
 
-| Variable | Default     | Description                      |
-| -------- | ----------- | -------------------------------- |
-| `HOST`   | `localhost` | Hostname used by the HTTP server |
-| `PORT`   | `8000`      | Port used by the HTTP server     |
+| Variable       | Default                  | Description                                               |
+| -------------- | ------------------------ | --------------------------------------------------------- |
+| `MONGODB_URI`  | required                 | MongoDB Atlas connection string                           |
+| `NODE_ENV`     | `development`            | Either `development` or `production`                      |
+| `HOST`         | `localhost`              | Hostname used by the HTTP server                          |
+| `PORT`         | `8000`                   | Port used by the HTTP server                              |
+| `LOG_LEVEL`    | `debug` / `info` in prod | Pino log level                                            |
+| `CORS_ORIGINS` | empty                    | Comma-separated allowed origins; empty allows all origins |
 
-`PORT` must be an integer between `1` and `65535`.
+`MONGODB_URI` is the only required variable. `PORT` must be an integer between
+`1` and `65535`. Blank values are treated as missing and fall back to the
+default.
+
+Stack traces appear in error responses outside production and are always
+suppressed when `NODE_ENV=production`.
+
+Request timeouts are left to the Node.js HTTP server, which already aborts a
+request after 300 seconds and incomplete headers after 60. `trust proxy` stays
+at the Express default, so `X-Forwarded-For` is ignored and the real socket
+address is used; enable it explicitly if the API is ever placed behind a reverse
+proxy, otherwise clients can spoof their IP and bypass rate limiting.
 
 ## API Endpoints
 
-| Method | Path | Description                     |
-| ------ | ---- | ------------------------------- |
-| `GET`  | `/`  | Returns a JSON welcome response |
+Business endpoints are served under the `/api/v1` prefix. Health probes are
+deliberately unversioned and exempt from rate limiting, because platform health
+checks poll a fixed path and must never be throttled into a false negative.
+
+| Method | Path            | Description                                    |
+| ------ | --------------- | ---------------------------------------------- |
+| `GET`  | `/api/v1`       | Returns a JSON welcome response                |
+| `GET`  | `/health/live`  | Liveness: the process is running               |
+| `GET`  | `/health/ready` | Readiness: dependencies usable; `503` when not |
 
 ## Available Scripts
 
@@ -73,6 +107,55 @@ All scripts are compatible with Windows, Ubuntu, and macOS.
 | `npm run format:check`                        | Checks formatting without modifying files                                        |
 | `npm run commitlint -- --edit <message-file>` | Validates a commit message file                                                  |
 | `npm run prepare`                             | Installs the project-managed Husky hooks; normally runs automatically on install |
+
+## Error Handling
+
+All errors are converted to JSON by a single error handler. Expected conditions
+are represented by `AppError` subclasses in `src/errors/app-error.js`, such as
+`NotFoundError`, `ValidationError`, and `ConflictError`. These carry an HTTP
+status code and are considered operational, so their message is safe to return
+to the client.
+
+Any error that is not an `AppError` is treated as a programming fault and
+reported as a generic `500` response; its details are logged but never exposed.
+Stack traces require both a non-production `NODE_ENV` and `EXPOSE_STACK=true`,
+so a single misconfigured variable cannot leak them.
+
+Every error response has the same shape:
+
+```json
+{
+  "success": false,
+  "code": "NOT_FOUND",
+  "message": "Game not found",
+  "requestId": "0f7c1c2e-4a1e-4b8f-9a2f-6f0d2b1b7a55"
+}
+```
+
+Clients must branch on `code`, never on `message`, because messages will change
+and will eventually be translated. Codes are declared in
+`src/constants/error-code.js`; a specific case may override the default, for
+example
+`new ConflictError('You already own this game', { code: 'GAME_ALREADY_OWNED' })`.
+
+`requestId` is taken from the incoming `X-Request-Id` header when present and
+generated otherwise. It is returned on every response header and inside every
+error body, so a user report can be traced directly to the matching log entries.
+
+Because Express 5 forwards rejected promises automatically, asynchronous
+handlers can simply `throw` without a wrapper function.
+
+## Security and Observability
+
+The HTTP pipeline applies Helmet, CORS, compression, rate limiting, body-size
+limits, and structured request logging with Pino before any route is reached.
+Sensitive fields such as authorization headers, cookies, and passwords are
+redacted from logs.
+
+The server performs a graceful shutdown on `SIGINT` and `SIGTERM`, stops
+accepting new connections, waits for in-flight requests up to
+`SHUTDOWN_TIMEOUT`, and forces exit if that deadline passes. Unhandled promise
+rejections and uncaught exceptions trigger the same controlled shutdown.
 
 ## Development Workflow
 
@@ -161,15 +244,15 @@ for example, the current welcome endpoint only needs a route and controller.
 
 ### Complex Workflow
 
-An orchestrator is optional and should only be introduced for a workflow that
-coordinates several focused services, such as checkout or payment completion.
+A workflow that spans several concerns, such as checkout, is still an ordinary
+service; it simply composes other focused services.
 
 ```mermaid
 flowchart LR
-  Controller --> Orchestrator
-  Orchestrator --> CatalogService["Catalog service"]
-  Orchestrator --> OrderService["Order service"]
-  Orchestrator --> PaymentService["Payment service"]
+  Controller --> CheckoutService["Checkout service"]
+  CheckoutService --> CatalogService["Catalog service"]
+  CheckoutService --> OrderService["Order service"]
+  CheckoutService --> PaymentService["Payment service"]
   CatalogService --> Repositories["Repositories"]
   OrderService --> Repositories
   PaymentService --> Repositories
@@ -177,22 +260,26 @@ flowchart LR
   Models --> MongoDB[(MongoDB)]
 ```
 
+There is deliberately no separate orchestrator layer. Its only distinction from
+a service would be calling several of them, which is a matter of degree rather
+than responsibility, and the ambiguity tends to drain business rules out of the
+services into a single procedural module.
+
 Each layer has one primary responsibility:
 
-| Layer         | Responsibility                                                       |
-| ------------- | -------------------------------------------------------------------- |
-| Routes        | Declare endpoints and attach middleware, validation, and controllers |
-| Controllers   | Translate HTTP requests and responses                                |
-| Services      | Implement business rules and application use cases                   |
-| Repositories  | Encapsulate database queries and persistence details                 |
-| Models        | Define database schemas, indexes, and structural constraints         |
-| Validations   | Validate request parameters, query strings, and request bodies       |
-| Middlewares   | Implement reusable HTTP pipeline behavior                            |
-| Orchestrators | Coordinate workflows that require multiple independent services      |
-| Config        | Load and validate application configuration                          |
-| Errors        | Define application errors and error-handling primitives              |
-| Constants     | Store stable application-wide constants                              |
-| Utils         | Provide small, stateless, reusable utilities                         |
+| Layer        | Responsibility                                                       |
+| ------------ | -------------------------------------------------------------------- |
+| Routes       | Declare endpoints and attach middleware, validation, and controllers |
+| Controllers  | Translate HTTP requests and responses                                |
+| Services     | Implement business rules and application use cases                   |
+| Repositories | Encapsulate database queries and persistence details                 |
+| Models       | Define database schemas, indexes, and structural constraints         |
+| Validations  | Validate request parameters, query strings, and request bodies       |
+| Middlewares  | Implement reusable HTTP pipeline behavior                            |
+| Config       | Load and validate application configuration                          |
+| Errors       | Define application errors and error-handling primitives              |
+| Constants    | Store stable application-wide constants                              |
+| Utils        | Provide small, stateless, reusable utilities                         |
 
 ### Dependency Rules
 
@@ -204,6 +291,7 @@ The following restrictions are enforced by ESLint:
 - Repositories cannot depend on routes, controllers, or services.
 - Models cannot depend on repositories or any higher layer.
 - Validations cannot access business or persistence layers.
+- Middlewares cannot depend on routes, controllers, repositories, or models.
 - Services must access stored data through repositories.
 - Dynamic imports and duplicate imports are prohibited.
 
@@ -268,8 +356,6 @@ avengers-api/
 |   |   |-- game.model.js
 |   |   |-- order.model.js
 |   |   `-- user.model.js
-|   |-- orchestrators/
-|   |   `-- checkout.orchestrator.js
 |   |-- repositories/
 |   |   |-- game.repository.js
 |   |   |-- order.repository.js
@@ -282,6 +368,7 @@ avengers-api/
 |   |   `-- index.js
 |   |-- services/
 |   |   |-- auth.service.js
+|   |   |-- checkout.service.js
 |   |   |-- game.service.js
 |   |   |-- order.service.js
 |   |   `-- payment.service.js
