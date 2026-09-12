@@ -3,11 +3,8 @@ import { HTTP_STATUS } from '../constants/http-status.js'
 import { isOperationalError } from '../errors/app-error.js'
 
 /**
- * Converts any error reaching the end of the pipeline into a JSON response.
- *
- * Operational errors keep their status code and message. Any other error is
- * reported as a generic 500 so that internal details are never leaked, while
- * the full error is still logged for diagnosis.
+ * Operational errors keep their status and message; anything else becomes a
+ * generic 500 so internal details never leak, while still being logged in full.
  */
 export function createErrorHandlerMiddleware({ exposeStack, logger }) {
   return function errorHandlerMiddleware(error, request, response, next) {
@@ -38,7 +35,6 @@ export function createErrorHandlerMiddleware({ exposeStack, logger }) {
       body.details = error.details
     }
 
-    // Lets a user quote a single value that points straight at the server logs.
     if (request.id !== undefined) {
       body.requestId = request.id
     }

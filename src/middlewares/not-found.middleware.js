@@ -1,9 +1,6 @@
 import { NotFoundError } from '../errors/app-error.js'
 
-/**
- * Converts an unmatched route into a NotFoundError so that every response is
- * produced by the single error handler.
- */
+// Routed through the error handler so that every response has one shape.
 export function notFoundMiddleware(request, _response, next) {
   next(
     new NotFoundError(

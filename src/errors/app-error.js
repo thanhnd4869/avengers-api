@@ -2,17 +2,12 @@ import { ERROR_CODE } from '../constants/error-code.js'
 import { HTTP_STATUS } from '../constants/http-status.js'
 
 /**
- * Base class for errors that are expected during normal operation.
+ * Marks an error as expected during normal operation, so the error handler may
+ * safely report its message. Anything that is not an `AppError` is treated as a
+ * programming fault and hidden behind a generic 500.
  *
- * An operational error describes a condition the API knows how to report to the
- * client, such as invalid input or a missing resource. Errors that are not
- * instances of this class are treated as programming faults and their details
- * are never exposed.
- *
- * Every operational error carries a stable `code` so that clients can branch on
- * it without depending on the wording of `message`. Subclasses provide a
- * sensible default code that callers may override for a more specific one, for
- * example `GAME_ALREADY_OWNED` instead of the generic `CONFLICT`.
+ * Subclasses set a default `code` that callers may override with a more
+ * specific one, such as `GAME_ALREADY_OWNED` instead of `CONFLICT`.
  */
 export class AppError extends Error {
   constructor(

@@ -1,13 +1,7 @@
 /**
- * Tracks the dependencies that must be usable before the API may receive
- * traffic.
- *
  * Liveness answers "is the process running"; readiness answers "can it serve a
  * request right now". Keeping them apart stops the platform from routing
  * traffic to an instance whose database connection is not up yet.
- *
- * A dependency is registered as a named async probe, for example the MongoDB
- * connection once persistence is introduced.
  */
 export function createHealthService() {
   const probes = new Map()

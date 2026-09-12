@@ -16,7 +16,11 @@ loadEnvironmentFile()
 const environment = getEnvironment()
 const logger = createLogger(environment)
 
-await connectDatabase({ mongodbUri: environment.mongodbUri, logger })
+await connectDatabase({
+  mongodbUri: environment.mongodbUri,
+  mongodbDbName: environment.mongodbDbName,
+  logger,
+})
 
 const healthService = createHealthService()
 healthService.registerProbe('mongodb', pingDatabase)

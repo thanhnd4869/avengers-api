@@ -16,14 +16,12 @@ export function createApp({ router, healthRouter, environment, logger }) {
   app.disable('x-powered-by')
 
   app.use(createSecurityMiddleware())
-  // Runs early so that every later stage, including rejected requests, can be
-  // correlated through a single request id.
+  // Early, so even rejected requests carry a request id.
   app.use(createRequestLoggerMiddleware({ logger }))
   app.use(createCorsMiddleware(environment))
 
-  // Probes are mounted before the rate limiter and outside the versioned
-  // prefix: a platform health checker polls a fixed path and must never be
-  // throttled into a false negative.
+  // Before the rate limiter and outside the version prefix: health checkers
+  // poll a fixed path and must never be throttled into a false negative.
   app.use(healthRouter)
 
   app.use(createRateLimitMiddleware())

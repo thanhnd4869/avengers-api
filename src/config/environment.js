@@ -67,9 +67,9 @@ export function getEnvironment(source = process.env) {
     hostname: readString(source, 'HOST', 'localhost'),
     port: readPort(source),
     mongodbUri: readMongodbUri(source),
+    mongodbDbName: readString(source, 'MONGODB_DB_NAME', 'avengers'),
     corsOrigins: Object.freeze(readOrigins(source)),
     logLevel: readString(source, 'LOG_LEVEL', isProduction ? 'info' : 'debug'),
-    // Stack traces are a development aid only; production never exposes them.
     exposeStack: !isProduction,
   })
 }

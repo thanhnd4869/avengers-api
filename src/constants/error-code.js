@@ -1,9 +1,5 @@
-/**
- * Stable, machine-readable error codes.
- *
- * Clients must branch on these values rather than on human-readable messages,
- * which are free to change and will eventually be translated.
- */
+// Clients must branch on these rather than on messages, which are free to
+// change and will eventually be translated.
 export const ERROR_CODE = Object.freeze({
   BAD_REQUEST: 'BAD_REQUEST',
   VALIDATION_FAILED: 'VALIDATION_FAILED',

@@ -7,9 +7,8 @@ export function startServer({ app, hostname, port, logger }) {
 }
 
 /**
- * Stops accepting connections, lets in-flight requests finish, then releases
- * external resources. Unexpected process-level faults funnel through the same
- * path so that shutdown logic exists in one place.
+ * Unexpected process-level faults funnel through the same path as signals, so
+ * shutdown logic lives in one place and cannot run twice.
  */
 export function registerShutdownHandlers({
   server,
