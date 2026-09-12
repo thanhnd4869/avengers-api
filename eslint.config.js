@@ -9,20 +9,23 @@ const restrictedImports = (...groups) => [
   },
 ]
 
-const routes = ['**/routes/**', './routes/**', '../routes/**']
-const controllers = [
-  '**/controllers/**',
-  './controllers/**',
-  '../controllers/**',
+// Covers relative specifiers at any depth plus the `@layer/*` aliases resolved
+// by alias-hooks.js. Without the alias entries these rules would silently stop
+// catching cross-layer imports written as `@services/...`.
+const layer = (name) => [
+  `**/${name}/**`,
+  `./${name}/**`,
+  `../${name}/**`,
+  `@${name}/*`,
+  `@${name}/**`,
 ]
-const services = ['**/services/**', './services/**', '../services/**']
-const repositories = [
-  '**/repositories/**',
-  './repositories/**',
-  '../repositories/**',
-]
-const models = ['**/models/**', './models/**', '../models/**']
-const config = ['**/config/**', './config/**', '../config/**']
+
+const routes = layer('routes')
+const controllers = layer('controllers')
+const services = layer('services')
+const repositories = layer('repositories')
+const models = layer('models')
+const config = layer('config')
 
 export default [
   {

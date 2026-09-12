@@ -1,4 +1,4 @@
-import { HTTP_STATUS } from '../constants/http-status.js'
+import { HTTP_STATUS } from '@constants/http-status.js'
 
 export function createHomeController({ homeService }) {
   function getHome(_request, response) {

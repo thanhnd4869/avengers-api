@@ -170,6 +170,27 @@ ESLint also enforces the dependency direction between architectural layers
 without additional plugins. Dynamic imports are prohibited because they can
 bypass these static dependency restrictions.
 
+### Import Alias
+
+Cross-layer imports use an `@layer/*` alias instead of a relative path, so a
+specifier never depends on how deeply the importing file is nested:
+
+```javascript
+import { HTTP_STATUS } from '@constants/http-status.js'
+```
+
+Imports inside the same directory keep the relative form, which is why
+`index.js` still imports `./app.js` and `./server.js`.
+
+Node does not resolve `@` aliases on its own, so `alias-hooks.js` registers a
+resolve hook and is loaded through `node --import`. Every entry point that runs
+Node directly, including future scripts, Dockerfiles, and debugger launch
+configurations, must pass that flag or module resolution fails at startup.
+
+Adding a new layer directory means updating three places: `ALIASED_LAYERS` in
+`alias-hooks.js` for the runtime, `paths` in `jsconfig.json` for the editor, and
+the layer list in `eslint.config.js` so the dependency rules keep applying.
+
 ### Naming Convention
 
 - Use `kebab-case` filenames with a layer suffix, such as `home.controller.js`,
@@ -303,6 +324,9 @@ The following restrictions are enforced by ESLint:
 - Routes, controllers, and services cannot read configuration directly; it is
   supplied by the composition root.
 - Dynamic imports and duplicate imports are prohibited.
+
+These restrictions match both relative specifiers and the `@layer/*` aliases, so
+an alias cannot be used to bypass a layer boundary.
 
 Services may compose other focused services when useful. Avoid circular service
 dependencies, unnecessary layers, and modules that mix HTTP, business, and

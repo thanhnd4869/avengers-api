@@ -1,5 +1,5 @@
 {
   "watch": ["src"],
   "ext": "js,json",
-  "exec": "npm run lint && node src/index.js"
+  "exec": "npm run lint && node --import ./alias-hooks.js src/index.js"
 }

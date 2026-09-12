@@ -1,4 +1,4 @@
-import { HTTP_STATUS } from '../constants/http-status.js'
+import { HTTP_STATUS } from '@constants/http-status.js'
 
 export function createHealthController({ healthService }) {
   function getLiveness(_request, response) {

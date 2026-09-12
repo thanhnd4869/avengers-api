@@ -1,6 +1,6 @@
-import { ERROR_CODE } from '../constants/error-code.js'
-import { HTTP_STATUS } from '../constants/http-status.js'
-import { isOperationalError } from '../errors/app-error.js'
+import { ERROR_CODE } from '@constants/error-code.js'
+import { HTTP_STATUS } from '@constants/http-status.js'
+import { isOperationalError } from '@errors/app-error.js'
 
 /**
  * Operational errors keep their status and message; anything else becomes a

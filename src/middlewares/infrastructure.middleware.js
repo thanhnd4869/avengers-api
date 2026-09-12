@@ -4,9 +4,9 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import { pinoHttp } from 'pino-http'
-import { ERROR_CODE } from '../constants/error-code.js'
-import { HTTP_STATUS } from '../constants/http-status.js'
-import { REQUEST_ID_HEADER } from '../constants/api.js'
+import { ERROR_CODE } from '@constants/error-code.js'
+import { HTTP_STATUS } from '@constants/http-status.js'
+import { REQUEST_ID_HEADER } from '@constants/api.js'
 
 export function createSecurityMiddleware() {
   return helmet()

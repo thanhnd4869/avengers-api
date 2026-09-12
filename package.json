@@ -24,7 +24,7 @@
   },
   "packageManager": "npm@11.16.0",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node --import ./alias-hooks.js src/index.js",
     "dev": "nodemon",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

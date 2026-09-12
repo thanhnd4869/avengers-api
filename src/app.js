@@ -1,14 +1,14 @@
 import express from 'express'
-import { API_PREFIX } from './constants/api.js'
-import { createErrorHandlerMiddleware } from './middlewares/error-handler.middleware.js'
+import { API_PREFIX } from '@constants/api.js'
+import { createErrorHandlerMiddleware } from '@middlewares/error-handler.middleware.js'
 import {
   createCompressionMiddleware,
   createCorsMiddleware,
   createRateLimitMiddleware,
   createRequestLoggerMiddleware,
   createSecurityMiddleware,
-} from './middlewares/infrastructure.middleware.js'
-import { notFoundMiddleware } from './middlewares/not-found.middleware.js'
+} from '@middlewares/infrastructure.middleware.js'
+import { notFoundMiddleware } from '@middlewares/not-found.middleware.js'
 
 export function createApp({ router, healthRouter, environment, logger }) {
   const app = express()

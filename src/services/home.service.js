@@ -1,4 +1,4 @@
-import { API_VERSION } from '../constants/api.js'
+import { API_VERSION } from '@constants/api.js'
 
 export function createHomeService() {
   function getWelcome() {

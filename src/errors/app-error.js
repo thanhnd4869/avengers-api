@@ -1,5 +1,5 @@
-import { ERROR_CODE } from '../constants/error-code.js'
-import { HTTP_STATUS } from '../constants/http-status.js'
+import { ERROR_CODE } from '@constants/error-code.js'
+import { HTTP_STATUS } from '@constants/http-status.js'
 
 /**
  * Marks an error as expected during normal operation, so the error handler may
