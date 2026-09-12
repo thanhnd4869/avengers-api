@@ -1,12 +1,10 @@
 import { Router } from 'express'
-import { createHealthController } from '../controllers/health.controller.js'
 
-export function createHealthRouter({ healthService }) {
+export function createHealthRouter({ healthController }) {
   const router = Router()
-  const controller = createHealthController({ healthService })
 
-  router.get('/health/live', controller.getLiveness)
-  router.get('/health/ready', controller.getReadiness)
+  router.get('/health/live', healthController.getLiveness)
+  router.get('/health/ready', healthController.getReadiness)
 
   return router
 }

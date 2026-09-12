@@ -11,14 +11,16 @@ export function createHealthService() {
   }
 
   function getLiveness() {
-    return { status: 'ok', uptime: process.uptime() }
+    return {
+      status: 'ok',
+      uptime: process.uptime(),
+      checkedAt: new Date().toISOString(),
+    }
   }
 
   async function getReadiness() {
-    const names = [...probes.keys()]
-
-    const results = await Promise.all(
-      names.map(async (name) => {
+    const entries = await Promise.all(
+      [...probes.keys()].map(async (name) => {
         try {
           await probes.get(name)()
           return [name, { status: 'ok' }]
@@ -28,10 +30,14 @@ export function createHealthService() {
       }),
     )
 
-    const dependencies = Object.fromEntries(results)
-    const ready = results.every(([, result]) => result.status === 'ok')
+    const ready = entries.every(([, result]) => result.status === 'ok')
 
-    return { ready, dependencies }
+    return {
+      ready,
+      status: ready ? 'ready' : 'not-ready',
+      dependencies: Object.fromEntries(entries),
+      checkedAt: new Date().toISOString(),
+    }
   }
 
   return { registerProbe, getLiveness, getReadiness }

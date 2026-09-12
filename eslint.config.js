@@ -22,6 +22,7 @@ const repositories = [
   '../repositories/**',
 ]
 const models = ['**/models/**', './models/**', '../models/**']
+const config = ['**/config/**', './config/**', '../config/**']
 
 export default [
   {
@@ -56,6 +57,10 @@ export default [
         [services, 'Routes must access business logic through controllers.'],
         [repositories, 'Routes must not access repositories directly.'],
         [models, 'Routes must not access models directly.'],
+        [
+          config,
+          'Routes must receive configuration from the composition root.',
+        ],
       ),
     },
   },
@@ -66,6 +71,10 @@ export default [
         [routes, 'Controllers must not depend on routes.'],
         [repositories, 'Controllers must access data through services.'],
         [models, 'Controllers must not access models directly.'],
+        [
+          config,
+          'Controllers must receive configuration from the composition root.',
+        ],
       ),
     },
   },
@@ -76,6 +85,10 @@ export default [
         [routes, 'Services must not depend on routes.'],
         [controllers, 'Services must not depend on controllers.'],
         [models, 'Services must access data through repositories.'],
+        [
+          config,
+          'Services must receive configuration from the composition root.',
+        ],
       ),
     },
   },
@@ -118,8 +131,16 @@ export default [
       'no-restricted-imports': restrictedImports(
         [routes, 'Middlewares must not depend on routes.'],
         [controllers, 'Middlewares must not depend on controllers.'],
-        [repositories, 'Middlewares must access data through services.'],
+        [
+          services,
+          'Middlewares are HTTP infrastructure; business logic belongs behind a controller.',
+        ],
+        [repositories, 'Middlewares must not access repositories.'],
         [models, 'Middlewares must not access models directly.'],
+        [
+          config,
+          'Middlewares must receive configuration from the composition root.',
+        ],
       ),
     },
   },

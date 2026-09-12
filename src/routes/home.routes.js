@@ -1,10 +1,9 @@
 import { Router } from 'express'
-import { getHome } from '../controllers/home.controller.js'
 
-export function createHomeRouter() {
+export function createHomeRouter({ homeController }) {
   const router = Router()
 
-  router.get('/', getHome)
+  router.get('/', homeController.getHome)
 
   return router
 }

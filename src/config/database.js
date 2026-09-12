@@ -21,7 +21,3 @@ export async function connectDatabase({ mongodbUri, mongodbDbName, logger }) {
 export async function disconnectDatabase() {
   await mongoose.disconnect()
 }
-
-export async function pingDatabase() {
-  await mongoose.connection.db.admin().ping({ maxTimeMS: 2000 })
-}

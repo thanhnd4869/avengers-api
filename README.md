@@ -118,8 +118,7 @@ to the client.
 
 Any error that is not an `AppError` is treated as a programming fault and
 reported as a generic `500` response; its details are logged but never exposed.
-Stack traces require both a non-production `NODE_ENV` and `EXPOSE_STACK=true`,
-so a single misconfigured variable cannot leak them.
+Stack traces are included only outside production.
 
 Every error response has the same shape:
 
@@ -152,10 +151,10 @@ limits, and structured request logging with Pino before any route is reached.
 Sensitive fields such as authorization headers, cookies, and passwords are
 redacted from logs.
 
-The server performs a graceful shutdown on `SIGINT` and `SIGTERM`, stops
-accepting new connections, waits for in-flight requests up to
-`SHUTDOWN_TIMEOUT`, and forces exit if that deadline passes. Unhandled promise
-rejections and uncaught exceptions trigger the same controlled shutdown.
+The server performs a graceful shutdown on `SIGINT` and `SIGTERM`: it stops
+accepting new connections, waits for in-flight requests to finish, and then
+closes the database connection. Unhandled promise rejections and uncaught
+exceptions trigger the same controlled shutdown.
 
 ## Development Workflow
 
@@ -188,8 +187,8 @@ bypass these static dependency restrictions.
 ## Architecture
 
 The project uses a Layered Architecture organized by technical responsibility.
-Layers are introduced when a feature needs them; simple endpoints do not need
-empty service or repository abstractions.
+Every request travels the same path through the layers, so the structure of an
+endpoint never depends on how much work it happens to do.
 
 ### Application Bootstrap
 
@@ -239,8 +238,15 @@ Route -> Controller -> Service -> Repository -> Model -> MongoDB
 
 Routes attach middleware, validation, and controllers. Controllers handle the
 HTTP boundary. Services implement use cases. Repositories isolate persistence,
-and models define MongoDB schemas. A layer may be skipped when it adds no value;
-for example, the current welcome endpoint only needs a route and controller.
+and models define MongoDB schemas.
+
+No layer is skipped. Even an endpoint as small as the welcome response goes
+through a service, so that response data always originates below the HTTP
+boundary. A layer with no persistence of its own simply stops earlier: the
+welcome flow ends at its service because it has nothing to store.
+
+The cost is a few thin modules; the benefit is that every endpoint is reached
+the same way, so adding behaviour later never requires restructuring.
 
 ### Complex Workflow
 
@@ -291,13 +297,29 @@ The following restrictions are enforced by ESLint:
 - Repositories cannot depend on routes, controllers, or services.
 - Models cannot depend on repositories or any higher layer.
 - Validations cannot access business or persistence layers.
-- Middlewares cannot depend on routes, controllers, repositories, or models.
+- Middlewares cannot depend on routes, controllers, services, repositories, or
+  models; they are HTTP infrastructure only.
 - Services must access stored data through repositories.
+- Routes, controllers, and services cannot read configuration directly; it is
+  supplied by the composition root.
 - Dynamic imports and duplicate imports are prohibited.
 
 Services may compose other focused services when useful. Avoid circular service
 dependencies, unnecessary layers, and modules that mix HTTP, business, and
 persistence responsibilities.
+
+### Composition
+
+ESLint can only see static imports, so a dependency passed as an argument slips
+past these rules. The convention is therefore that `index.js` is the only place
+that wires layers together: it builds a repository, hands it to a service, hands
+that service to a controller, and hands the controller to a router.
+
+A module never receives something from more than one layer below it. A router
+accepts a controller, never a service; a controller accepts a service, never a
+repository. Configuration follows the same path, which is why `config/` holds
+connection lifecycle and settings only, while a query such as the readiness
+`ping` belongs in a repository.
 
 ## Git Hooks and Commit Messages
 
