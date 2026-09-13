@@ -124,15 +124,16 @@ Every error response has the same shape:
 
 ```json
 {
-  "success": false,
-  "code": "NOT_FOUND",
-  "message": "Game not found",
-  "requestId": "0f7c1c2e-4a1e-4b8f-9a2f-6f0d2b1b7a55"
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Game not found",
+    "requestId": "0f7c1c2e-4a1e-4b8f-9a2f-6f0d2b1b7a55"
+  }
 }
 ```
 
-Clients must branch on `code`, never on `message`, because messages will change
-and will eventually be translated. Codes are declared in
+Clients must branch on `error.code`, never on `message`, because messages will
+change and will eventually be translated. Codes are declared in
 `src/constants/error-code.js`; a specific case may override the default, for
 example
 `new ConflictError('You already own this game', { code: 'GAME_ALREADY_OWNED' })`.

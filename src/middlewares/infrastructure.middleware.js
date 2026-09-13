@@ -47,9 +47,10 @@ export function createRateLimitMiddleware() {
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: {
-      success: false,
-      code: ERROR_CODE.TOO_MANY_REQUESTS,
-      message: 'Too many requests; please try again later',
+      error: {
+        code: ERROR_CODE.RATE_LIMITED,
+        message: 'Too many requests; please try again later',
+      },
     },
     statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
   })

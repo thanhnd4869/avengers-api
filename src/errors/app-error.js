@@ -41,8 +41,8 @@ export class BadRequestError extends AppError {
 
 export class ValidationError extends AppError {
   constructor(message = 'Validation failed', options = {}) {
-    super(message, HTTP_STATUS.UNPROCESSABLE_ENTITY, {
-      code: ERROR_CODE.VALIDATION_FAILED,
+    super(message, HTTP_STATUS.BAD_REQUEST, {
+      code: ERROR_CODE.VALIDATION_ERROR,
       ...options,
     })
   }
