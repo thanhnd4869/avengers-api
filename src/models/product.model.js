@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema(
     platforms: { type: [productPlatformSchema], default: [] },
     published: { type: Boolean, default: true },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'products' },
 )
 
 productSchema.index({ published: 1, sales: -1 })

@@ -22,7 +22,7 @@ const postSchema = new mongoose.Schema(
     category: { type: postCategoryReferenceSchema, required: true },
     published: { type: Boolean, default: true },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'posts' },
 )
 
 postSchema.index({ published: 1, publishedAt: -1 })

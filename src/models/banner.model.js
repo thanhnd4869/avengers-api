@@ -12,7 +12,7 @@ const bannerSchema = new mongoose.Schema(
     sortOrder: { type: Number, default: 0 },
     published: { type: Boolean, default: true },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'banners' },
 )
 
 bannerSchema.index({ published: 1, sortOrder: 1 })

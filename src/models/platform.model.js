@@ -10,7 +10,7 @@ const platformSchema = new mongoose.Schema(
     sortOrder: { type: Number, default: 0 },
     published: { type: Boolean, default: true },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'platforms' },
 )
 
 platformSchema.index({ published: 1, sortOrder: 1 })

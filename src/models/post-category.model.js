@@ -6,7 +6,7 @@ const postCategorySchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true },
     sortOrder: { type: Number, default: 0 },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'post_categories' },
 )
 
 postCategorySchema.index({ sortOrder: 1 })

@@ -33,7 +33,7 @@ const homeMediaSchema = new mongoose.Schema(
     latestVideo: { type: latestVideoSchema, default: null },
     screenshots: { type: [screenshotSchema], default: [] },
   },
-  { timestamps: true },
+  { timestamps: true, collection: 'home_media' },
 )
 
 export const HomeMedia = mongoose.model('HomeMedia', homeMediaSchema)
