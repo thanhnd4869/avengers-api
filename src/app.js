@@ -24,7 +24,7 @@ export function createApp({ router, healthRouter, environment, logger }) {
   // poll a fixed path and must never be throttled into a false negative.
   app.use(healthRouter)
 
-  app.use(createRateLimitMiddleware())
+  app.use(createRateLimitMiddleware(environment))
   app.use(createCompressionMiddleware())
   app.use(express.json({ limit: '100kb' }))
   app.use(express.urlencoded({ extended: true, limit: '100kb' }))

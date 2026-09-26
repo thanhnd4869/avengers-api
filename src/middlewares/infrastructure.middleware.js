@@ -40,10 +40,16 @@ export function createRequestLoggerMiddleware({ logger }) {
   })
 }
 
-export function createRateLimitMiddleware() {
+// A frontend dev server fetches every home section on each reload (and React
+// StrictMode doubles that), so the production budget runs out within a few
+// minutes of normal work. Development keeps the limiter in place, so its
+// headers and 429 path still behave the same, but with far more headroom.
+const RATE_LIMIT = Object.freeze({ production: 300, development: 10_000 })
+
+export function createRateLimitMiddleware({ isProduction }) {
   return rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 300,
+    limit: isProduction ? RATE_LIMIT.production : RATE_LIMIT.development,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: {
