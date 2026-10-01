@@ -18,6 +18,6 @@
       "@validations/*": ["./src/validations/*"]
     }
   },
-  "include": ["src/**/*", "alias-hooks.js"],
+  "include": ["src/**/*", "scripts/**/*", "alias-hooks.js"],
   "exclude": ["node_modules"]
 }

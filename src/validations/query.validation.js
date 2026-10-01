@@ -32,6 +32,12 @@ export function parseEnum(value, { field, fallback, allowed }) {
   return parsed
 }
 
+export function parseOptionalEnum(value, { field, allowed }) {
+  return value === undefined
+    ? undefined
+    : parseEnum(value, { field, fallback: undefined, allowed })
+}
+
 export function parseOptionalSlug(value, { field }) {
   if (value === undefined) {
     return undefined

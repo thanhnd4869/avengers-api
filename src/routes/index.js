@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import { createBannerRouter } from './banner.routes.js'
 import { createContactMessageRouter } from './contact-message.routes.js'
-import { createHomeMediaRouter } from './home-media.routes.js'
 import { createHomeRouter } from './home.routes.js'
+import { createMediaRouter } from './media.routes.js'
 import { createPlatformRouter } from './platform.routes.js'
 import { createPostCategoryRouter } from './post-category.routes.js'
 import { createPostRouter } from './post.routes.js'
 import { createProductRouter } from './product.routes.js'
+import { createSocialLinkRouter } from './social-link.routes.js'
 
 export function createRouter({
   homeController,
@@ -15,7 +16,8 @@ export function createRouter({
   productController,
   postController,
   postCategoryController,
-  homeMediaController,
+  mediaController,
+  socialLinkController,
   contactMessageController,
 }) {
   const router = Router()
@@ -28,7 +30,8 @@ export function createRouter({
     '/post-categories',
     createPostCategoryRouter({ postCategoryController }),
   )
-  router.use('/home-media', createHomeMediaRouter({ homeMediaController }))
+  router.use('/media', createMediaRouter({ mediaController }))
+  router.use('/social-links', createSocialLinkRouter({ socialLinkController }))
   router.use(
     '/contact',
     createContactMessageRouter({ contactMessageController }),

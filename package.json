@@ -26,6 +26,7 @@
   "scripts": {
     "start": "node --import ./alias-hooks.js src/index.js",
     "dev": "nodemon",
+    "seed": "node --import ./alias-hooks.js scripts/seed.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",

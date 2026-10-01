@@ -1,0 +1,636 @@
+{
+  "platforms": [
+    {
+      "slug": "pc",
+      "name": "PC",
+      "image": {
+        "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgZmlsbD0iY3VycmVudENvbG9yIiB2aWV3Qm94PSIwIDAgNjIgNjIiIGNsYXNzPSJzcXVhZGZvcmNlLWljb24iPjxwYXRoIGQ9Ik0zNC41OTU3IDI0LjIzNTNDMzMuNTk1NyAyMy4yMzUzIDM3Ljg2NSAxNi43MzUzIDM5LjA5NTcgMTcuMjM1M0M0MC4zMjY0IDE3LjczNTMgMzUuNTk1NyAyNS4yMzUzIDM0LjU5NTcgMjQuMjM1M1oiIGZpbGw9ImN1cnJlbnRDb2xvciI+PC9wYXRoPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNDEuMDk1NyAxMS4yMzUzQzQxLjA5NTcgMTEuMjM1MyA0MC4xMzYxIDEzLjgxNiAzOS4wOTU3IDE1LjczNTNDMzcuMDk1NyAxNC43MzUzIDMxLjU5NTcgMjMuNzM1MyAzMy4wOTU3IDI1LjIzNTNDMzIuMjAwNiAyNy4xMzgzIDMwLjU5NTcgMjkuNzM1MyAzMS4wOTU3IDMwLjIzNTNDMzEuNTk1NyAzMC43MzUzIDMzLjU5NTcgMjcuNzM1MyAzNC41OTU3IDI2LjIzNTNDMzYuNTk1NyAyNy4yMzUzIDQyLjA5NTcgMTcuNzM1MyA0MC4wOTU3IDE2LjIzNTNDNDEuMjY3MiAxNC4yODI3IDQyLjU5NTcgMTIuMjM1MyA0Mi41OTU3IDEyLjIzNTNDNDMuNTk1NyAxMC43MzUzIDUyLjAxODcgMTYuNzM1MyA1MS4wOTU3IDIwLjczNTNDNDguMjg5NCAzMi44OTU2IDQyLjM4OTQgMzUuOTcyOSA0Mi4wOTU3IDM3LjczNTNDNDAuNTk1NyA0Ni43MzUzIDMzLjU5NTcgNTMuMjM1MyAyMy41OTU3IDUzLjIzNTNDMTYuMDk1NyA1My4yMzUzIDkuMDk1NjcgNDUuMjM1MyAxMC4wOTU3IDM3LjczNTNDMTEuNDI5IDI3LjczNTMgMjEuNjQ2NiAyNC45ODA4IDIyLjU5NTcgMjAuMjM1M0MyMy4wOTU3IDE3LjczNTMgMjUuNDMzOSAxMi4wNjQ3IDI5LjU5NTcgOC43MzUyOEMzMi4wOTU3IDYuNzM1MjggNDIuMDk1NyA5LjIzNTI4IDQxLjA5NTcgMTEuMjM1M1pNMTcuNTk1NyAzMi4yMzUzQzE2LjY1NjcgMzMuMTc0MiAxNC41OTU3IDMxLjczNTMgMTUuMDk1NyAzMC43MzUzQzE1LjU5NTcgMjkuNzM1MyAxNy41OTU3IDI3LjczNTMgMjEuMDk1NyAyNS4yMzUzQzIwLjA5NTcgMjguNzM1MyAxOC41MzQ2IDMxLjI5NjMgMTcuNTk1NyAzMi4yMzUzWk0yMC41OTU3IDQwLjczNTNDMjAuNTk1NyAzOC4zODQgMjEuNzQ4NSAzNi44NzM0IDI0LjA5NTcgMzYuNzM1M0MyNi41NzY3IDM2LjU4OTMgMjguMDk1NyAzOC4yNSAyOC4wOTU3IDQwLjczNTNDMjguMDk1NyA0My4yMjA2IDI2LjU3NjcgNDQuODgxMiAyNC4wOTU3IDQ0LjczNTNDMjEuNzQ4NSA0NC41OTcyIDIwLjU5NTcgNDMuMDg2NiAyMC41OTU3IDQwLjczNTNaTTMyLjU5NTcgNDUuMjM1M0MzMi4xODA0IDQ2LjI3MzMgMzMuNTk1NyA0Ny43MzUzIDM0LjU5NTcgNDcuMjM1M0MzNi40Mzk2IDQ2LjMxMzMgMzkuNTk1NyA0MS43MzUzIDQwLjA5NTcgMzguMjM1M0MzOS40MDYyIDM4LjkyNDcgMzguNDE5NiAzOS42NzM2IDM3LjM4MTggNDAuNDYxNEMzNS40MDkgNDEuOTU4OSAzMy4yNTA5IDQzLjU5NzEgMzIuNTk1NyA0NS4yMzUzWiIgZmlsbD0iY3VycmVudENvbG9yIj48L3BhdGg+PHBhdGggZD0iTTIyLjA5NTcgNDAuNzM1M0MyMi4wOTU3IDM5LjQ4NSAyMi44NTMgMzguMzczNCAyNC4wOTU3IDM4LjIzNTNDMjUuNDY3OSAzOC4wODI4IDI2LjU5NTcgMzkuMzU0NiAyNi41OTU3IDQwLjczNTNDMjYuNTk1NyA0Mi4xMTYgMjUuNDY3OSA0My4zODc4IDI0LjA5NTcgNDMuMjM1M0MyMi44NTMgNDMuMDk3MiAyMi4wOTU3IDQxLjk4NTYgMjIuMDk1NyA0MC43MzUzWiIgZmlsbD0iY3VycmVudENvbG9yIj48L3BhdGg+PC9zdmc+",
+        "alt": "PC platform icon"
+      },
+      "sortOrder": 1
+    },
+    {
+      "slug": "ps4",
+      "name": "PS4",
+      "image": {
+        "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgZmlsbD0iY3VycmVudENvbG9yIiB2aWV3Qm94PSIwIDAgNjIgNjIiIGNsYXNzPSJzcXVhZGZvcmNlLWljb24iPjxwYXRoIGQ9Ik0yNy4wMzk2IDIxLjVWMTMuNUMyNy4wMzk2IDEzIDI3LjUzOTYgMTIuNSAyOC4wMzk2IDEyLjVIMzUuMDM5NUMzNS41Mzk2IDEyLjUgMzYuMDM5NiAxMyAzNi4wMzk2IDEzLjVWMjEuNUMzNi4wMzk2IDIyIDM1LjUzOTYgMjIuNSAzNS4wMzk1IDIyLjVIMjguMDM5NkMyNy41Mzk2IDIyLjUgMjcuMDM5NiAyMiAyNy4wMzk2IDIxLjVaIiBmaWxsPSJjdXJyZW50Q29sb3IiPjwvcGF0aD48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTIwLjAzOTYgMjVDMjAuNTEzMiAyNC43MTU5IDIwLjc5MjYgMjQuNDk0IDIxLjAzOTYgMjRDMjEuMzg4OSAyMy4zMDE0IDIxLjM4ODkgMjIuNjk4NiAyMS4wMzk2IDIyQzIwLjc5MjYgMjEuNTA2IDIwLjUxMzIgMjEuMjg0MSAyMC4wMzk2IDIxQzE5LjU2NiAyMC43MTU5IDE2LjI5OTMgMjEuNjQ5IDE2LjAzOTYgMjJDMTUuOTkzNyAyMi4wNjIxIDE1Ljk0ODMgMjIuMTE5OSAxNS45MDQ4IDIyLjE3NTNDMTUuNzAyNCAyMi40MzMyIDE1LjUzOTYgMjIuNjQwNiAxNS41Mzk2IDIzQzE1LjUzOTYgMjMuMzU5NCAxNS43MDI0IDIzLjU2NjggMTUuOTA0OCAyMy44MjQ3QzE1Ljk0ODMgMjMuODgwMSAxNS45OTM3IDIzLjkzNzkgMTYuMDM5NiAyNEMxNi4yOTkzIDI0LjM1MSAxOS41NjYgMjUuMjg0MSAyMC4wMzk2IDI1Wk04LjAzOTYgMjVDNy41NjYwMiAyNC43MTU5IDcuMjg2NTkgMjQuNDk0IDcuMDM5NiAyNEM2LjY5MDMgMjMuMzAxNCA2LjY5MDMgMjIuNjk4NiA3LjAzOTYgMjJDNy4yODY1OSAyMS41MDYgNy41NjYwMiAyMS4yODQxIDguMDM5NiAyMUM4LjUxMzE4IDIwLjcxNTkgMTEuNzc5OSAyMS42NDkgMTIuMDM5NiAyMkMxMi4wODU1IDIyLjA2MjEgMTIuMTMwOSAyMi4xMTk5IDEyLjE3NDQgMjIuMTc1M0MxMi4zNzY4IDIyLjQzMzIgMTIuNTM5NiAyMi42NDA2IDEyLjUzOTYgMjNDMTIuNTM5NiAyMy4zNTk0IDEyLjM3NjggMjMuNTY2OCAxMi4xNzQ0IDIzLjgyNDdDMTIuMTMwOSAyMy44ODAxIDEyLjA4NTUgMjMuOTM3OSAxMi4wMzk2IDI0QzExLjc3OTkgMjQuMzUxIDguNTEzMTggMjUuMjg0MSA4LjAzOTYgMjVaTTE0LjAzOTYgMjEuNUMxNC40MDcyIDIxLjUgMTQuNjE4MSAyMS4zMzI2IDE0Ljg4MzIgMjEuMTIyMkMxNC45MzMgMjEuMDgyNyAxNC45ODQ2IDIxLjA0MTcgMTUuMDM5NiAyMUMxNS4zODc1IDIwLjczNjEgMTYuMzA3OCAxNy45ODI4IDE2LjAzOTYgMTcuNUMxNS43NzE0IDE3LjAxNzIgMTUuNTMzNiAxNi43NDcgMTUuMDM5NiAxNi41QzE0LjM0MSAxNi4xNTA3IDEzLjczODIgMTYuMTUwNyAxMy4wMzk2IDE2LjVDMTIuNTQ1NiAxNi43NDcgMTIuMzA3OCAxNy4wMTcyIDEyLjAzOTYgMTcuNUMxMS43NzE0IDE3Ljk4MjggMTIuNjkxOCAyMC43MzYxIDEzLjAzOTYgMjFDMTMuMDk0NiAyMS4wNDE3IDEzLjE0NjIgMjEuMDgyNyAxMy4xOTYgMjEuMTIyMkMxMy40NjExIDIxLjMzMjYgMTMuNjcyIDIxLjUgMTQuMDM5NiAyMS41Wk0xNC4wMzk2IDI0LjVDMTQuNDA3MiAyNC41IDE0LjYxODEgMjQuNjY3NCAxNC44ODMyIDI0Ljg3NzhDMTQuOTMzIDI0LjkxNzMgMTQuOTg0NiAyNC45NTgzIDE1LjAzOTYgMjVDMTUuMzg3NSAyNS4yNjM5IDE2LjMwNzggMjguMDE3MiAxNi4wMzk2IDI4LjVDMTUuNzcxNCAyOC45ODI4IDE1LjUzMzYgMjkuMjUzIDE1LjAzOTYgMjkuNUMxNC4zNDEgMjkuODQ5MyAxMy43MzgyIDI5Ljg0OTMgMTMuMDM5NiAyOS41QzEyLjU0NTYgMjkuMjUzIDEyLjMwNzggMjguOTgyOCAxMi4wMzk2IDI4LjVDMTEuNzcxNCAyOC4wMTcyIDEyLjY5MTggMjUuMjYzOSAxMy4wMzk2IDI1QzEzLjA5NDYgMjQuOTU4MyAxMy4xNDYyIDI0LjkxNzMgMTMuMTk2IDI0Ljg3NzhDMTMuNDYxMSAyNC42Njc0IDEzLjY3MiAyNC41IDE0LjAzOTYgMjQuNVpNNDIuMDM5NiAyM0M0Mi4wMzk2IDIxLjg5NTQgNDIuOTM1IDIxIDQ0LjAzOTYgMjFDNDUuMTQ0MiAyMSA0Ni4wMzk2IDIxLjg5NTQgNDYuMDM5NiAyM0M0Ni4wMzk2IDI0LjEwNDYgNDUuMTQ0MiAyNSA0NC4wMzk2IDI1QzQyLjkzNSAyNSA0Mi4wMzk2IDI0LjEwNDYgNDIuMDM5NiAyM1pNNDcuMDM5NiAxOC41QzQ3LjAzOTYgMTcuMzk1NCA0Ny45MzUgMTYuNSA0OS4wMzk2IDE2LjVDNTAuMTQ0MSAxNi41IDUxLjAzOTYgMTcuMzk1NCA1MS4wMzk2IDE4LjVDNTEuMDM5NiAxOS42MDQ2IDUwLjE0NDEgMjAuNSA0OS4wMzk2IDIwLjVDNDcuOTM1IDIwLjUgNDcuMDM5NiAxOS42MDQ2IDQ3LjAzOTYgMTguNVpNNTIuMDM5NiAyM0M1Mi4wMzk2IDIxLjg5NTQgNTIuOTM1IDIxIDU0LjAzOTYgMjFDNTUuMTQ0MiAyMSA1Ni4wMzk2IDIxLjg5NTQgNTYuMDM5NiAyM0M1Ni4wMzk2IDI0LjEwNDYgNTUuMTQ0MiAyNSA1NC4wMzk2IDI1QzUyLjkzNSAyNSA1Mi4wMzk2IDI0LjEwNDYgNTIuMDM5NiAyM1pNNDcuMDM5NiAyNy41QzQ3LjAzOTYgMjYuMzk1NCA0Ny45MzUgMjUuNSA0OS4wMzk2IDI1LjVDNTAuMTQ0MSAyNS41IDUxLjAzOTYgMjYuMzk1NCA1MS4wMzk2IDI3LjVDNTEuMDM5NiAyOC42MDQ2IDUwLjE0NDEgMjkuNSA0OS4wMzk2IDI5LjVDNDcuOTM1IDI5LjUgNDcuMDM5NiAyOC42MDQ2IDQ3LjAzOTYgMjcuNVoiIGZpbGw9ImN1cnJlbnRDb2xvciI+PC9wYXRoPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMy4wMzk1OSAzMEMtMC40NjA0MDMgNDMuNSAwLjAzOTU5NzUgNTAgOC41Mzk1OSA1MC41QzEzLjYyNzggNTAuNzk5MyAxNS43MjQzIDQ1LjM5OTQgMTcuMzI3MSA0MS4yNzExQzE4LjA4NjggMzkuMzE0MyAxOC43MzU2IDM3LjY0MzEgMTkuNTM5NiAzN0MyMS4wMzk2IDQxIDI3LjAzOTYgNDEgMjguNTM5NiAzN0gzMS41Mzk2TDM0LjUzOTYgMzdDMzYuMDM5NSA0MSA0Mi4wMzk1IDQxIDQzLjUzOTYgMzdDNDQuMzQzNSAzNy42NDMxIDQ0Ljk5MjMgMzkuMzE0MyA0NS43NTIgNDEuMjcxMUM0Ny4zNTQ4IDQ1LjM5OTQgNDkuNDUxMyA1MC43OTkzIDU0LjUzOTUgNTAuNUM2My4wMzk1IDUwIDYzLjUzOTUgNDMuNSA2MC4wMzk1IDMwQzU5Ljc3MzUgMjguOTc0IDU5LjQyMzEgMjguMDgwOSA1OS4wODk5IDI3LjIzMkM1OC41NDEyIDI1LjgzMzkgNTguMDM5NSAyNC41NTU1IDU4LjAzOTUgMjNDNTguMDM5NSAxNyA1My4wMzk1IDEyIDQ5LjAzOTYgMTJDNDYuMDM5NSAxMiA0NS4wMzk2IDEyLjUgNDQuMDM5NiAxMy41SDM3LjAzOTZWMjJDMzcuMDM5NiAyMyAzNi41Mzk2IDIzLjUgMzUuNTM5NiAyMy41SDI3LjUzOTZDMjYuNTM5NiAyMy41IDI2LjAzOTYgMjMgMjYuMDM5NiAyMlYxMy41SDE5LjAzOTZDMTguMDM5NiAxMi41IDE3LjAzOTYgMTIgMTQuMDM5NiAxMkMxMC4wMzk2IDEyIDUuMDM5NiAxNyA1LjAzOTYgMjNDNS4wMzk2IDI0LjU1NTUgNC41Mzc5IDI1LjgzMzkgMy45ODkyMiAyNy4yMzJDMy42NTYwNyAyOC4wODA5IDMuMzA1NiAyOC45NzQgMy4wMzk1OSAzMFpNMjQuMDM5NiAzMC41QzIxLjgzMDUgMzAuNSAyMC4wMzk2IDMyLjI5MDkgMjAuMDM5NiAzNC41QzIwLjAzOTYgMzYuNzA5MSAyMS44MzA1IDM4LjUgMjQuMDM5NiAzOC41QzI2LjI0ODcgMzguNSAyOC4wMzk2IDM2LjcwOTEgMjguMDM5NiAzNC41QzI4LjAzOTYgMzIuMjkwOSAyNi4yNDg3IDMwLjUgMjQuMDM5NiAzMC41Wk02LjAzOTU5IDIzQzYuMDM5NTkgMTguNzE3NiA5Ljc1NzE0IDE1LjUgMTQuMDM5NiAxNS41QzE4LjMyMiAxNS41IDIyLjAzOTYgMTguNzE3NiAyMi4wMzk2IDIzQzIyLjAzOTYgMjcuMjgyNCAxOC4zMjIgMzAuNSAxNC4wMzk2IDMwLjVDOS43NTcxNCAzMC41IDYuMDM5NTkgMjcuMjgyNCA2LjAzOTU5IDIzWk0yNS4wMzk2IDE2QzI1LjAzOTYgMTYgMjUuMDM5NiAxNSAyNC4wMzk2IDE1QzIzLjAzOTYgMTUgMjMuMDM5NiAxNiAyMy4wMzk2IDE2VjE5QzIzLjAzOTYgMTkgMjMuMDM5NiAyMCAyNC4wMzk2IDIwQzI1LjAzOTYgMjAgMjUuMDM5NiAxOSAyNS4wMzk2IDE5VjE2Wk0zOS4wMzk1IDMwLjVDNDEuMjQ4NyAzMC41IDQzLjAzOTUgMzIuMjkwOSA0My4wMzk1IDM0LjVDNDMuMDM5NSAzNi43MDkxIDQxLjI0ODcgMzguNSAzOS4wMzk1IDM4LjVDMzYuODMwNCAzOC41IDM1LjAzOTUgMzYuNzA5MSAzNS4wMzk1IDM0LjVDMzUuMDM5NSAzMi4yOTA5IDM2LjgzMDQgMzAuNSAzOS4wMzk1IDMwLjVaTTU3LjAzOTUgMjNDNTcuMDM5NSAxOC43MTc2IDUzLjMyMiAxNS41IDQ5LjAzOTYgMTUuNUM0NC43NTcxIDE1LjUgNDEuMDM5NSAxOC43MTc2IDQxLjAzOTUgMjNDNDEuMDM5NSAyNy4yODI0IDQ0Ljc1NzEgMzAuNSA0OS4wMzk2IDMwLjVDNTMuMzIyIDMwLjUgNTcuMDM5NSAyNy4yODI0IDU3LjAzOTUgMjNaTTM4LjAzOTUgMTZDMzguMDM5NSAxNiAzOC4wMzk1IDE1IDM5LjAzOTUgMTVDNDAuMDM5NSAxNSA0MC4wMzk1IDE2IDQwLjAzOTUgMTZWMTlDNDAuMDM5NSAxOSA0MC4wMzk1IDIwIDM5LjAzOTUgMjBDMzguMDM5NSAyMCAzOC4wMzk1IDE5IDM4LjAzOTUgMTlWMTZaIiBmaWxsPSJjdXJyZW50Q29sb3IiPjwvcGF0aD48L3N2Zz4=",
+        "alt": "PS4 platform icon"
+      },
+      "sortOrder": 2
+    },
+    {
+      "slug": "xbox",
+      "name": "XBOX",
+      "image": {
+        "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MiIgaGVpZ2h0PSI2MiIgZmlsbD0iY3VycmVudENvbG9yIiB2aWV3Qm94PSIwIDAgNjIgNjIiIGNsYXNzPSJzcXVhZGZvcmNlLWljb24iPjxwYXRoIGQ9Ik0yOC43ODg2IDE0VjExLjVMMzIuNzg4NiAxMS41VjE0QzMyLjc4ODYgMTUgMzIuMjg4NiAxNS41IDMxLjI4ODYgMTUuNUwzMC4yODg2IDE1LjVDMjkuMjg4NiAxNS41IDI4Ljc4ODYgMTUgMjguNzg4NiAxNFoiIGZpbGw9ImN1cnJlbnRDb2xvciI+PC9wYXRoPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNy4yODg1NiA1MS41QzEuMjg4NiA1MS41IDAuMDgwMzU2OCAzOSA1LjI4ODYxIDI2LjVDNS45NjYyNiAyNC44NzM2IDYuNzE1NTYgMjMuMjkyMSA3LjQwNTE1IDIxLjgzNjZDOC43MDI1NiAxOS4wOTgyIDkuNzg4NjIgMTYuODA1OSA5Ljc4ODYyIDE1LjVDOS43ODg2MSAxMi4yMTUyIDE4LjI4ODUgMTAgMTkuNzg4NiAxMEMyMS4yODg2IDEwIDIyLjc4ODYgMTAuNSAyMy4yODg2IDExLjVIMjYuNzg4NlYxNEMyNi43ODg2IDE2LjUgMjguNzg4NSAxNy41IDMwLjc4ODYgMTcuNUMzMi43ODg2IDE3LjUgMzQuNzg4NiAxNi41IDM0Ljc4ODYgMTRWMTEuNUgzOC4yODg1QzM4Ljc4ODUgMTAuNSA0MC4yODg1IDEwIDQxLjc4ODYgMTBDNDMuMjg4NiAxMCA1MS43ODg1IDEyLjIxNTIgNTEuNzg4NSAxNS41QzUxLjc4ODUgMTYuODA1OSA1Mi44NzQ2IDE5LjA5ODIgNTQuMTcyIDIxLjgzNjZDNTQuODYxNiAyMy4yOTIxIDU1LjYxMDkgMjQuODczNiA1Ni4yODg1IDI2LjVDNjEuNDk2OCAzOSA2MC4yODg1IDUxLjUgNTQuMjg4NiA1MS41QzUyLjc0ODUgNTEuNSA0OC41NCA0Ny42NDU3IDQ0Ljg1OTUgNDQuMjc0OUM0My43NjA0IDQzLjI2ODMgNDIuNzA4NCA0Mi4zMDQ4IDQxLjc4ODYgNDEuNUwzMC43ODg2IDQxLjVIMTkuNzg4NkMxOC44Njg4IDQyLjMwNDggMTcuODE2OCA0My4yNjgzIDE2LjcxNzcgNDQuMjc0OUMxMy4wMzcyIDQ3LjY0NTcgOC44Mjg2OCA1MS41IDcuMjg4NTYgNTEuNVpNMjAuNzg4NiAyMS41QzIwLjc4ODYgMjQuMjYxNCAxOC41NSAyNi41IDE1Ljc4ODYgMjYuNUMxMy4wMjcyIDI2LjUgMTAuNzg4NiAyNC4yNjE0IDEwLjc4ODYgMjEuNUMxMC43ODg2IDE4LjczODYgMTMuMDI3MiAxNi41IDE1Ljc4ODYgMTYuNUMxOC41NSAxNi41IDIwLjc4ODYgMTguNzM4NiAyMC43ODg2IDIxLjVaTTE1Ljc4ODYgMjQuNUMxNC4xMzE4IDI0LjUgMTIuNzg4NiAyMy4xNTY5IDEyLjc4ODYgMjEuNUMxMi43ODg2IDE5Ljg0MzEgMTQuMTMxOCAxOC41IDE1Ljc4ODYgMTguNUMxNy40NDU1IDE4LjUgMTguNzg4NiAxOS44NDMxIDE4Ljc4ODYgMjEuNUMxOC43ODg2IDIzLjE1NjkgMTcuNDQ1NSAyNC41IDE1Ljc4ODYgMjQuNVpNMTcuMjg4NiAzMEMxNy4yODg2IDI5LjUgMTcuNzg4NiAyOSAxOC4yODg2IDI5SDIxLjI4ODZWMjZDMjEuMjg4NiAyNS41IDIxLjc4ODYgMjUgMjIuMjg4NiAyNUgyNS4yODg2QzI1Ljc4ODYgMjUgMjYuMjg4NiAyNS41IDI2LjI4ODYgMjZWMjlIMjkuMjg4NkMyOS43ODg2IDI5IDMwLjI4ODYgMjkuNSAzMC4yODg2IDMwVjMzQzMwLjI4ODYgMzMuNSAyOS43ODg2IDM0IDI5LjI4ODYgMzRIMjYuMjg4NlYzN0MyNi4yODg2IDM3LjUgMjUuNzg4NiAzOCAyNS4yODg2IDM4SDIyLjI4ODZDMjEuNzg4NiAzOCAyMS4yODg2IDM3LjUgMjEuMjg4NiAzN1YzNEgxOC4yODg2QzE3Ljc4ODYgMzQgMTcuMjg4NiAzMy41IDE3LjI4ODYgMzNWMzBaTTE4Ljc4ODYgMzFDMTguNzg4NiAzMC41IDE5LjI4ODcgMzAuNSAxOS4yODg3IDMwLjVIMjIuNzg4NlYyN0MyMi43ODg2IDI3IDIyLjc4ODYgMjYuNSAyMy4yODg2IDI2LjVIMjQuMjg4NkMyNC43ODg2IDI2LjUgMjQuNzg4NiAyNyAyNC43ODg2IDI3VjMwLjVIMjguMjg4NkMyOC4yODg2IDMwLjUgMjguNzg4NiAzMC41IDI4Ljc4ODYgMzFWMzJDMjguNzg4NiAzMi41IDI4LjI4ODYgMzIuNSAyOC4yODg2IDMyLjVIMjQuNzg4NlYzNkMyNC43ODg2IDM2IDI0Ljc4ODYgMzYuNSAyNC4yODg2IDM2LjVIMjMuMjg4NkMyMi43ODg2IDM2LjUgMjIuNzg4NiAzNiAyMi43ODg2IDM2VjMyLjVIMTkuMjg4N0MxOS4yODg3IDMyLjUgMTguNzg4NiAzMi41IDE4Ljc4ODYgMzJWMzFaTTQzLjI4ODUgMzEuNUM0My4yODg1IDM0LjI2MTQgNDEuMDQ5OSAzNi41IDM4LjI4ODUgMzYuNUMzNS41MjcxIDM2LjUgMzMuMjg4NSAzNC4yNjE0IDMzLjI4ODUgMzEuNUMzMy4yODg1IDI4LjczODYgMzUuNTI3MSAyNi41IDM4LjI4ODUgMjYuNUM0MS4wNDk5IDI2LjUgNDMuMjg4NSAyOC43Mzg2IDQzLjI4ODUgMzEuNVpNMzguMjg4NSAzNC41QzM2LjYzMTcgMzQuNSAzNS4yODg1IDMzLjE1NjkgMzUuMjg4NSAzMS41QzM1LjI4ODUgMjkuODQzMSAzNi42MzE3IDI4LjUgMzguMjg4NSAyOC41QzM5Ljk0NTQgMjguNSA0MS4yODg1IDI5Ljg0MzEgNDEuMjg4NSAzMS41QzQxLjI4ODUgMzMuMTU2OSAzOS45NDU0IDM0LjUgMzguMjg4NSAzNC41Wk0zOC43ODg2IDIxLjVDMzguNzg4NiAyMC4zOTU0IDM5LjY4NDEgMTkuNSA0MC43ODg2IDE5LjVDNDEuODkzMiAxOS41IDQyLjc4ODYgMjAuMzk1NCA0Mi43ODg2IDIxLjVDNDIuNzg4NiAyMi42MDQ2IDQxLjg5MzIgMjMuNSA0MC43ODg2IDIzLjVDMzkuNjg0MSAyMy41IDM4Ljc4ODYgMjIuNjA0NiAzOC43ODg2IDIxLjVaTTQ0Ljc4ODYgMTUuNUM0My42ODQxIDE1LjUgNDIuNzg4NiAxNi4zOTU0IDQyLjc4ODYgMTcuNUM0Mi43ODg2IDE4LjYwNDYgNDMuNjg0MSAxOS41IDQ0Ljc4ODYgMTkuNUM0NS44OTMyIDE5LjUgNDYuNzg4NiAxOC42MDQ2IDQ2Ljc4ODYgMTcuNUM0Ni43ODg2IDE2LjM5NTQgNDUuODkzMiAxNS41IDQ0Ljc4ODYgMTUuNVpNNDYuNzg4NiAyMS41QzQ2Ljc4ODYgMjAuMzk1NCA0Ny42ODQxIDE5LjUgNDguNzg4NiAxOS41QzQ5Ljg5MzIgMTkuNSA1MC43ODg2IDIwLjM5NTQgNTAuNzg4NiAyMS41QzUwLjc4ODYgMjIuNjA0NiA0OS44OTMyIDIzLjUgNDguNzg4NiAyMy41QzQ3LjY4NDEgMjMuNSA0Ni43ODg2IDIyLjYwNDYgNDYuNzg4NiAyMS41Wk00NC43ODg2IDIzLjVDNDMuNjg0MSAyMy41IDQyLjc4ODYgMjQuMzk1NCA0Mi43ODg2IDI1LjVDNDIuNzg4NiAyNi42MDQ2IDQzLjY4NDEgMjcuNSA0NC43ODg2IDI3LjVDNDUuODkzMiAyNy41IDQ2Ljc4ODYgMjYuNjA0NiA0Ni43ODg2IDI1LjVDNDYuNzg4NiAyNC4zOTU0IDQ1Ljg5MzIgMjMuNSA0NC43ODg2IDIzLjVaIiBmaWxsPSJjdXJyZW50Q29sb3IiPjwvcGF0aD48L3N2Zz4=",
+        "alt": "XBOX platform icon"
+      },
+      "sortOrder": 3
+    }
+  ],
+  "products": [
+    {
+      "slug": "a-hundred-thousand",
+      "name": "A hundred thousand",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-121.jpg",
+        "alt": "A hundred thousand"
+      },
+      "releaseDate": "2026-07-02",
+      "isPreorder": false,
+      "ratingAverage": 3.5,
+      "ratingCount": 2,
+      "salesCount": 1525,
+      "variants": [
+        {
+          "platform": "pc",
+          "edition": "Standard",
+          "price": 26,
+          "originalPrice": 35,
+          "currency": "USD",
+          "stock": 90
+        },
+        {
+          "platform": "ps4",
+          "edition": "Standard",
+          "price": 26,
+          "originalPrice": 35,
+          "currency": "USD",
+          "stock": 70
+        }
+      ]
+    },
+    {
+      "slug": "she-was-bouncing",
+      "name": "She was bouncing",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-41.jpg",
+        "alt": "She was bouncing"
+      },
+      "releaseDate": "2026-04-09",
+      "isPreorder": false,
+      "ratingAverage": 5,
+      "ratingCount": 2,
+      "salesCount": 980,
+      "variants": [
+        {
+          "platform": "ps4",
+          "edition": "Standard",
+          "price": 20,
+          "originalPrice": 25,
+          "currency": "USD",
+          "stock": 40
+        }
+      ]
+    },
+    {
+      "slug": "just-then-her-head",
+      "name": "Just then her head",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-61-1.jpg",
+        "alt": "Just then her head"
+      },
+      "releaseDate": "2026-08-14",
+      "isPreorder": false,
+      "ratingAverage": 5,
+      "ratingCount": 2,
+      "salesCount": 1840,
+      "variants": [
+        {
+          "platform": "pc",
+          "edition": "Standard",
+          "price": 49,
+          "originalPrice": 59,
+          "currency": "USD",
+          "stock": 120
+        },
+        {
+          "platform": "ps4",
+          "edition": "Standard",
+          "price": 59,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 80
+        },
+        {
+          "platform": "xbox",
+          "edition": "Standard",
+          "price": 69,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 60
+        }
+      ]
+    },
+    {
+      "slug": "in-all-revolutions-of",
+      "name": "In all revolutions of",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-51.jpg",
+        "alt": "In all revolutions of"
+      },
+      "releaseDate": "2027-02-12",
+      "isPreorder": true,
+      "ratingAverage": 3,
+      "ratingCount": 2,
+      "salesCount": 0,
+      "variants": [
+        {
+          "platform": "xbox",
+          "edition": "Standard",
+          "price": 23,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 500
+        }
+      ]
+    },
+    {
+      "slug": "it-was-some-time-before",
+      "name": "It was some time before",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-31.jpg",
+        "alt": "It was some time before"
+      },
+      "releaseDate": "2026-09-25",
+      "isPreorder": false,
+      "ratingAverage": 3,
+      "ratingCount": 2,
+      "salesCount": 860,
+      "variants": [
+        {
+          "platform": "pc",
+          "edition": "Standard",
+          "price": 14,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 200
+        },
+        {
+          "platform": "ps4",
+          "edition": "Standard",
+          "price": 14,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 150
+        },
+        {
+          "platform": "xbox",
+          "edition": "Standard",
+          "price": 14,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 150
+        }
+      ]
+    },
+    {
+      "slug": "my-mother-was-so-much",
+      "name": "My mother was so much",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-101.jpg",
+        "alt": "My mother was so much"
+      },
+      "releaseDate": "2026-05-21",
+      "isPreorder": false,
+      "ratingAverage": 4.5,
+      "ratingCount": 2,
+      "salesCount": 1310,
+      "variants": [
+        {
+          "platform": "ps4",
+          "edition": "Standard",
+          "price": 32,
+          "originalPrice": 40,
+          "currency": "USD",
+          "stock": 55
+        }
+      ]
+    },
+    {
+      "slug": "the-word-was",
+      "name": "The word was",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-91.jpg",
+        "alt": "The word was"
+      },
+      "releaseDate": "2026-09-18",
+      "isPreorder": false,
+      "ratingAverage": 5,
+      "ratingCount": 2,
+      "salesCount": 1190,
+      "variants": [
+        {
+          "platform": "ps4",
+          "edition": "Standard",
+          "price": 23,
+          "originalPrice": 30,
+          "currency": "USD",
+          "stock": 75
+        }
+      ]
+    },
+    {
+      "slug": "with-what-mingled-joy",
+      "name": "With what mingled joy",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-71.jpg",
+        "alt": "With what mingled joy"
+      },
+      "releaseDate": "2026-11-06",
+      "isPreorder": true,
+      "ratingAverage": 4.5,
+      "ratingCount": 2,
+      "salesCount": 0,
+      "variants": [
+        {
+          "platform": "xbox",
+          "edition": "Standard",
+          "price": 14,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 500
+        }
+      ]
+    },
+    {
+      "slug": "so-saying-he-unbuckled",
+      "name": "So saying he unbuckled",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-11.jpg",
+        "alt": "So saying he unbuckled"
+      },
+      "releaseDate": "2027-03-19",
+      "isPreorder": true,
+      "ratingAverage": 3,
+      "ratingCount": 2,
+      "salesCount": 0,
+      "variants": [
+        {
+          "platform": "pc",
+          "edition": "Standard",
+          "price": 23,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 500
+        }
+      ]
+    },
+    {
+      "slug": "she-was-bouncing-away",
+      "name": "She was bouncing away",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-81.jpg",
+        "alt": "She was bouncing away"
+      },
+      "releaseDate": "2026-12-04",
+      "isPreorder": true,
+      "ratingAverage": 4,
+      "ratingCount": 2,
+      "salesCount": 0,
+      "variants": [
+        {
+          "platform": "xbox",
+          "edition": "Standard",
+          "price": 20,
+          "originalPrice": null,
+          "currency": "USD",
+          "stock": 500
+        }
+      ]
+    }
+  ],
+  "postCategories": [
+    {
+      "slug": "action",
+      "name": "Action",
+      "sortOrder": 1
+    },
+    {
+      "slug": "adventure",
+      "name": "Adventure",
+      "sortOrder": 2
+    },
+    {
+      "slug": "indie",
+      "name": "Indie",
+      "sortOrder": 3
+    },
+    {
+      "slug": "mmo",
+      "name": "MMO",
+      "sortOrder": 4
+    },
+    {
+      "slug": "racing",
+      "name": "Racing",
+      "sortOrder": 5
+    },
+    {
+      "slug": "strategy",
+      "name": "Strategy",
+      "sortOrder": 6
+    }
+  ],
+  "posts": [
+    {
+      "slug": "for-good-too-though-in-consequence",
+      "title": "Lesser years third in you’re rule",
+      "excerpt": "Our them creepeth living saw they’re. Unto itself over made every fish make were blessed cattle bring creepeth. Is Day,…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-41.jpg",
+        "alt": "Lesser years third in you’re rule"
+      },
+      "category": "strategy",
+      "publishedAt": "2019-09-12T11:48:41.000Z",
+      "commentCount": 2
+    },
+    {
+      "slug": "we-found-a-witch-may-we-burn-her-2",
+      "title": "We found a witch! May we burn her?",
+      "excerpt": "Days. Heaven. Fruit fly and to, set heaven. Bearing which whose isn’t cattle kind moveth fly that. Day saw be…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-31.jpg",
+        "alt": "We found a witch! May we burn her?"
+      },
+      "category": "racing",
+      "publishedAt": "2019-09-06T11:49:39.000Z",
+      "commentCount": 2
+    },
+    {
+      "slug": "he-made-his-passenger-captain-of-one-3",
+      "title": "Creepeth you’re a behold heaven",
+      "excerpt": "Abundantly brought blessed subdue in beginning blessed man image, sea likeness creeping.",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-51.jpg",
+        "alt": "Creepeth you’re a behold heaven"
+      },
+      "category": "mmo",
+      "publishedAt": "2019-09-06T11:46:05.000Z",
+      "commentCount": 1
+    },
+    {
+      "slug": "he-made-his-passenger-captain-of-one-2",
+      "title": "Doesn’t bring moveth you’re was",
+      "excerpt": "All. Us kind don’t. Won’t them firmament night fly also give creature female them creature moveth doesn’t fly together beast…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-9.jpg",
+        "alt": "Doesn’t bring moveth you’re was"
+      },
+      "category": "action",
+      "publishedAt": "2019-09-06T11:23:09.000Z",
+      "commentCount": 1
+    },
+    {
+      "slug": "at-length-one-of-them-called-out-in-a-clear-2",
+      "title": "Tree set gathering moved place",
+      "excerpt": "His Brought green without stars seasons great itself all fly. Brought midst isn’t tree itself dominion created. Land male deep…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-71.jpg",
+        "alt": "Tree set gathering moved place"
+      },
+      "category": "action",
+      "publishedAt": "2019-09-06T11:17:30.000Z",
+      "commentCount": 0
+    },
+    {
+      "slug": "he-made-his-passenger-captain-of-one",
+      "title": "He made his passenger captain of one",
+      "excerpt": "Man place meat deep face our behold second. Had can’t own greater waters moving meat all replenish years saw from…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-61.jpg",
+        "alt": "He made his passenger captain of one"
+      },
+      "category": "indie",
+      "publishedAt": "2019-09-06T11:15:25.000Z",
+      "commentCount": 0
+    },
+    {
+      "slug": "at-length-one-of-them-called-out-in-a-clear",
+      "title": "At length one of them called out in a clear",
+      "excerpt": "So very likeness second moving, were isn’t divided. It face you rule male seed. Wherein. Herb years, won’t dry. Bring…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-71.jpg",
+        "alt": "At length one of them called out in a clear"
+      },
+      "category": "racing",
+      "publishedAt": "2019-09-06T11:14:39.000Z",
+      "commentCount": 0
+    },
+    {
+      "slug": "at-first-for-some-time-i-was-not-able-to-answer",
+      "title": "At first, for some time, I was not able to answer",
+      "excerpt": "Cattle. Female. Gathered dominion you’re had. Don’t yielding great Waters two own in winged also they’re, to they’re make won’t…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/slide-41.jpg",
+        "alt": "At first, for some time, I was not able to answer"
+      },
+      "category": "adventure",
+      "publishedAt": "2019-09-06T11:13:26.000Z",
+      "commentCount": 0
+    },
+    {
+      "slug": "we-found-a-witch-may-we-burn-her",
+      "title": "We found a witch! May we burn her?",
+      "excerpt": "Night from whales open face a two divided morning their deep can’t given grass morning. I, kind lights. Divided had…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-81.jpg",
+        "alt": "We found a witch! May we burn her?"
+      },
+      "category": "strategy",
+      "publishedAt": "2019-09-06T11:12:06.000Z",
+      "commentCount": 0
+    },
+    {
+      "slug": "smell-magic-in-the-air-or-maybe-barbecue",
+      "title": "Smell magic in the air. Or maybe barbecue",
+      "excerpt": "Make day above signs which made give days air a there beginning creepeth tree to, land forth life dry dominion…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-11.jpg",
+        "alt": "Smell magic in the air. Or maybe barbecue"
+      },
+      "category": "mmo",
+      "publishedAt": "2019-09-06T11:10:18.000Z",
+      "commentCount": 0
+    },
+    {
+      "slug": "grab-your-sword-and-fight-the-horde",
+      "title": "Grab your sword and fight the Horde",
+      "excerpt": "Just then her head struck against the roof of the hall: in fact she was now more than nine feet…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-21.jpg",
+        "alt": "Grab your sword and fight the Horde"
+      },
+      "category": "action",
+      "publishedAt": "2019-09-06T10:40:14.000Z",
+      "commentCount": 3
+    },
+    {
+      "slug": "for-good-too-though-in-consequence-2",
+      "title": "For good, too though, in consequence",
+      "excerpt": "Together don’t creature bring our be they’re creature sixth don’t bring grass were all sea shall winged deep won’t Female…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/post-41.jpg",
+        "alt": "For good, too though, in consequence"
+      },
+      "category": "racing",
+      "publishedAt": "2019-09-05T11:50:35.000Z",
+      "commentCount": 0
+    }
+  ],
+  "banners": [
+    {
+      "title": "As we Passed, I remarked",
+      "excerpt": "As we passed, I remarked a beautiful church-spire rising above some old elms in the park; and before them, in the midst of a lawn, chimneys covered with ivy, and the windows shining in the sun.",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/slide-11.jpg",
+        "alt": "As we Passed, I remarked"
+      },
+      "linkUrl": null,
+      "linkLabel": "Read More",
+      "sortOrder": 1
+    },
+    {
+      "title": "He made his passenger captain of one",
+      "excerpt": "Now the races of these two have been for some ages utterly extinct, and besides to discourse any further of them would not be at all to my purpose. But the concern I have most at heart is for our Corporation of Poets, from whom I am preparing a petition to your Highness, to be subscribed with the names of one…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/slide-21.jpg",
+        "alt": "He made his passenger captain of one"
+      },
+      "linkUrl": null,
+      "linkLabel": null,
+      "sortOrder": 2
+    },
+    {
+      "title": "At length one of them called out in a clear",
+      "excerpt": "TJust then her head struck against the roof of the hall: in fact she was now more than nine feet high…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/slide-41.jpg",
+        "alt": "At length one of them called out in a clear"
+      },
+      "linkUrl": null,
+      "linkLabel": "Read More",
+      "sortOrder": 3
+    },
+    {
+      "title": "For good, too though, in consequence",
+      "excerpt": "She gave my mother such a turn, that I have always been convinced I am indebted to Miss Betsey for having been born on a Friday. The word was appropriate to the moment. My mother was so much worse that Peggotty, coming in with the teaboard and candles, and seeing at a glance how ill she was, – as Miss Betsey might have done sooner if there had been light enough, – conveyed her upstairs to her own room with all speed; and immediately dispatched Ham Peggotty, her nephew, who had been for some days past secreted in the house…",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/slide-51.jpg",
+        "alt": "For good, too though, in consequence"
+      },
+      "linkUrl": null,
+      "linkLabel": "Read More",
+      "sortOrder": 4
+    }
+  ],
+  "media": [
+    {
+      "type": "video",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/sddefault1.jpg",
+        "alt": "Latest video"
+      },
+      "url": "https://www.youtube.com/watch?v=vXy8UBazlO8",
+      "sortOrder": 1
+    },
+    {
+      "type": "screenshot",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-11.jpg",
+        "alt": "Called"
+      },
+      "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-11.jpg",
+      "sortOrder": 1
+    },
+    {
+      "type": "screenshot",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-21.jpg",
+        "alt": "Latest screenshot"
+      },
+      "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-21.jpg",
+      "sortOrder": 2
+    },
+    {
+      "type": "screenshot",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-31.jpg",
+        "alt": "Latest screenshot"
+      },
+      "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-31.jpg",
+      "sortOrder": 3
+    },
+    {
+      "type": "screenshot",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-41.jpg",
+        "alt": "Latest screenshot"
+      },
+      "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-41.jpg",
+      "sortOrder": 4
+    },
+    {
+      "type": "screenshot",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-51.jpg",
+        "alt": "Latest screenshot"
+      },
+      "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-51.jpg",
+      "sortOrder": 5
+    },
+    {
+      "type": "screenshot",
+      "image": {
+        "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-61.jpg",
+        "alt": "Latest screenshot"
+      },
+      "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/07/gallery-61.jpg",
+      "sortOrder": 6
+    }
+  ],
+  "socialLinks": [
+    {
+      "network": "twitch",
+      "label": "Twitch",
+      "url": "#",
+      "sortOrder": 1
+    },
+    {
+      "network": "instagram",
+      "label": "Instagram",
+      "url": "#",
+      "sortOrder": 2
+    },
+    {
+      "network": "facebook",
+      "label": "Facebook",
+      "url": "#",
+      "sortOrder": 3
+    },
+    {
+      "network": "google-plus",
+      "label": "Google Plus",
+      "url": "#",
+      "sortOrder": 4
+    },
+    {
+      "network": "youtube",
+      "label": "YouTube",
+      "url": "#",
+      "sortOrder": 5
+    },
+    {
+      "network": "twitter",
+      "label": "Twitter",
+      "url": "#",
+      "sortOrder": 6
+    },
+    {
+      "network": "rss",
+      "label": "RSS",
+      "url": "#",
+      "sortOrder": 7
+    }
+  ]
+}

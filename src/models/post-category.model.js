@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { publicJsonPlugin } from './plugins/public-json.plugin.js'
 
 const postCategorySchema = new mongoose.Schema(
   {
@@ -10,5 +11,6 @@ const postCategorySchema = new mongoose.Schema(
 )
 
 postCategorySchema.index({ sortOrder: 1 })
+postCategorySchema.plugin(publicJsonPlugin)
 
 export const PostCategory = mongoose.model('PostCategory', postCategorySchema)
