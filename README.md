@@ -59,18 +59,27 @@ The API is available at `http://localhost:8000` by default.
 
 ## Environment Variables
 
-| Variable       | Default                  | Description                                               |
-| -------------- | ------------------------ | --------------------------------------------------------- |
-| `MONGODB_URI`  | required                 | MongoDB Atlas connection string                           |
-| `NODE_ENV`     | `development`            | Either `development` or `production`                      |
-| `HOST`         | `localhost`              | Hostname used by the HTTP server                          |
-| `PORT`         | `8000`                   | Port used by the HTTP server                              |
-| `LOG_LEVEL`    | `debug` / `info` in prod | Pino log level                                            |
-| `CORS_ORIGINS` | empty                    | Comma-separated allowed origins; empty allows all origins |
+| Variable                   | Default                         | Description                                                                |
+| -------------------------- | ------------------------------- | -------------------------------------------------------------------------- |
+| `MONGODB_URI`              | required                        | MongoDB Atlas connection string                                            |
+| `JWT_SECRET`               | required                        | Access-token signing key, at least 32 bytes                                |
+| `NODE_ENV`                 | `development`                   | Either `development` or `production`                                       |
+| `HOST`                     | `localhost`                     | Hostname used by the HTTP server                                           |
+| `PORT`                     | `8000`                          | Port used by the HTTP server                                               |
+| `LOG_LEVEL`                | `debug` / `info` in prod        | Pino log level                                                             |
+| `CORS_ORIGINS`             | empty                           | Comma-separated allowed origins; empty allows **no** cross-origin requests |
+| `ACCESS_TOKEN_TTL_MINUTES` | `15`                            | Lifetime of an access token                                                |
+| `REFRESH_TOKEN_TTL_DAYS`   | `30`                            | Lifetime of a session (refresh token)                                      |
+| `APP_URL`                  | `http://localhost:3000`         | Frontend URL used to build the links in emails                             |
+| `SMTP_HOST`                | empty; required in production   | SMTP server; when empty, emails are only logged                            |
+| `SMTP_PORT`                | `587`                           | `465` uses TLS directly, other ports STARTTLS                              |
+| `SMTP_USER`, `SMTP_PASS`   | empty                           | SMTP credentials                                                           |
+| `MAIL_FROM`                | `Avengers <no-reply@localhost>` | Sender of outgoing emails                                                  |
 
-`MONGODB_URI` is the only required variable. `PORT` must be an integer between
-`1` and `65535`. Blank values are treated as missing and fall back to the
-default.
+`MONGODB_URI` and `JWT_SECRET` are required. Generate a secret with
+`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`.
+`PORT` must be an integer between `1` and `65535`. Blank values are treated as
+missing and fall back to the default.
 
 Stack traces appear in error responses outside production and are always
 suppressed when `NODE_ENV=production`.
@@ -93,20 +102,63 @@ checks poll a fixed path and must never be throttled into a false negative.
 | `GET`  | `/health/live`  | Liveness: the process is running               |
 | `GET`  | `/health/ready` | Readiness: dependencies usable; `503` when not |
 
+### Authentication
+
+| Method  | Path                                 | Auth   | Description                                                 |
+| ------- | ------------------------------------ | ------ | ----------------------------------------------------------- |
+| `POST`  | `/api/v1/auth/register`              | –      | Creates a `user` account and signs it in                    |
+| `POST`  | `/api/v1/auth/login`                 | –      | `{ email, password, remember }`; ends any other session     |
+| `POST`  | `/api/v1/auth/refresh`               | cookie | Rotates the refresh cookie, returns a new access token      |
+| `POST`  | `/api/v1/auth/logout`                | cookie | Ends the session and clears the cookie                      |
+| `GET`   | `/api/v1/auth/me`                    | token  | The signed-in user                                          |
+| `POST`  | `/api/v1/auth/verify-email`          | –      | `{ token }` from the emailed link                           |
+| `POST`  | `/api/v1/auth/verify-email/resend`   | token  | Sends a new link; 60-second cooldown                        |
+| `POST`  | `/api/v1/auth/forgot-password`       | –      | `{ email }`; always `200`, so accounts cannot be discovered |
+| `POST`  | `/api/v1/auth/reset-password`        | –      | `{ token, password }`; signs the account out everywhere     |
+| `GET`   | `/api/v1/admin/contact-messages`     | admin  | `?page&limit&status=new\|read\|replied`                     |
+| `PATCH` | `/api/v1/admin/contact-messages/:id` | admin  | `{ status }`                                                |
+
+Sign-in, sign-up and refresh answer `{ data: { user, accessToken } }`. The
+access token (JWT, HS256, ~15 minutes) is sent as `Authorization: Bearer` and
+should be kept in memory only. The refresh token is a random value in an
+`httpOnly`, `SameSite=Lax` cookie scoped to `/api/v1/auth` (`Secure` in
+production); with `remember: true` it lasts `REFRESH_TOKEN_TTL_DAYS`, otherwise
+until the browser closes. It is rotated on every refresh, and presenting a
+replaced token again ends the session.
+
+An account has **one** session at a time: signing in elsewhere ends the previous
+one, and its next request gets `401` with code `SESSION_REVOKED`. A session that
+was signed out or has expired answers `401` with code `SESSION_ENDED` instead.
+The session is checked on every authenticated request.
+
+Not signed in is `401`; signed in without the required role is `403`. Every
+`/admin` route requires the `admin` role and a verified email. Admins are
+created only with `npm run create-admin`; sign-up always creates `user`.
+
+Login is limited to 10 attempts per 15 minutes per IP, and sign-up and email
+sending to 5 per hour (20 times more in development).
+
+New passwords (sign-up, reset, `create-admin`) must be 8–128 characters and
+contain a lowercase letter, an uppercase letter, a number and a special
+character. Sign-in does not re-check these rules, so accounts created under
+older rules keep working.
+
 ## Available Scripts
 
 All scripts are compatible with Windows, Ubuntu, and macOS.
 
-| Command                                       | Description                                                                      |
-| --------------------------------------------- | -------------------------------------------------------------------------------- |
-| `npm start`                                   | Starts the application                                                           |
-| `npm run dev`                                 | Starts the application with Nodemon and restarts after source changes            |
-| `npm run lint`                                | Checks JavaScript files with ESLint                                              |
-| `npm run lint:fix`                            | Fixes automatically repairable ESLint issues                                     |
-| `npm run format`                              | Formats supported project files with Prettier                                    |
-| `npm run format:check`                        | Checks formatting without modifying files                                        |
-| `npm run commitlint -- --edit <message-file>` | Validates a commit message file                                                  |
-| `npm run prepare`                             | Installs the project-managed Husky hooks; normally runs automatically on install |
+| Command                                            | Description                                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `npm start`                                        | Starts the application                                                           |
+| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes            |
+| `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data   |
+| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`)  |
+| `npm run lint`                                     | Checks JavaScript files with ESLint                                              |
+| `npm run lint:fix`                                 | Fixes automatically repairable ESLint issues                                     |
+| `npm run format`                                   | Formats supported project files with Prettier                                    |
+| `npm run format:check`                             | Checks formatting without modifying files                                        |
+| `npm run commitlint -- --edit <message-file>`      | Validates a commit message file                                                  |
+| `npm run prepare`                                  | Installs the project-managed Husky hooks; normally runs automatically on install |
 
 ## Error Handling
 

@@ -1,4 +1,6 @@
 import { Router } from 'express'
+import { createAdminRouter } from './admin.routes.js'
+import { createAuthRouter } from './auth.routes.js'
 import { createBannerRouter } from './banner.routes.js'
 import { createContactMessageRouter } from './contact-message.routes.js'
 import { createHomeRouter } from './home.routes.js'
@@ -19,8 +21,21 @@ export function createRouter({
   mediaController,
   socialLinkController,
   contactMessageController,
+  authController,
+  adminContactMessageController,
+  auth,
+  authRateLimits,
 }) {
   const router = Router()
+
+  router.use(
+    '/auth',
+    createAuthRouter({ authController, auth, rateLimits: authRateLimits }),
+  )
+  router.use(
+    '/admin',
+    createAdminRouter({ auth, adminContactMessageController }),
+  )
 
   router.use('/banners', createBannerRouter({ bannerController }))
   router.use('/platforms', createPlatformRouter({ platformController }))

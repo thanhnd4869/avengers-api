@@ -57,6 +57,70 @@ function readMongodbUri(source) {
   return uri
 }
 
+// HS256 is only as strong as its key; RFC 7518 requires at least 256 bits.
+const JWT_SECRET_MIN_BYTES = 32
+
+function readJwtSecret(source) {
+  const secret = readString(source, 'JWT_SECRET', '')
+
+  if (Buffer.byteLength(secret, 'utf8') < JWT_SECRET_MIN_BYTES) {
+    throw new RangeError(
+      `JWT_SECRET is required and must be at least ${JWT_SECRET_MIN_BYTES} bytes`,
+    )
+  }
+
+  return secret
+}
+
+function readPositiveInteger(source, key, fallback) {
+  const value = Number(readString(source, key, String(fallback)))
+
+  if (!Number.isInteger(value) || value < 1) {
+    throw new RangeError(`${key} must be a positive integer`)
+  }
+
+  return value
+}
+
+function readAppUrl(source) {
+  const raw = readString(source, 'APP_URL', 'http://localhost:3000')
+
+  try {
+    // Links in emails are built from this, so a trailing slash would double up.
+    return new URL(raw).href.replace(/\/$/, '')
+  } catch {
+    throw new RangeError('APP_URL must be an absolute URL')
+  }
+}
+
+/**
+ * Without SMTP settings the mailer only logs each message, which is enough to
+ * develop against. Production refuses to start, since nobody could verify an
+ * email address or reset a password.
+ */
+function readSmtp(source, isProduction) {
+  const host = readString(source, 'SMTP_HOST', '')
+
+  if (host === '') {
+    if (isProduction) {
+      throw new RangeError('SMTP_HOST is required in production')
+    }
+
+    return null
+  }
+
+  const port = readPositiveInteger(source, 'SMTP_PORT', 587)
+
+  return Object.freeze({
+    host,
+    port,
+    // Port 465 speaks TLS from the first byte; others upgrade with STARTTLS.
+    secure: port === 465,
+    user: readString(source, 'SMTP_USER', ''),
+    pass: readString(source, 'SMTP_PASS', ''),
+  })
+}
+
 export function getEnvironment(source = process.env) {
   const nodeEnv = readNodeEnv(source)
   const isProduction = nodeEnv === 'production'
@@ -71,5 +135,19 @@ export function getEnvironment(source = process.env) {
     corsOrigins: Object.freeze(readOrigins(source)),
     logLevel: readString(source, 'LOG_LEVEL', isProduction ? 'info' : 'debug'),
     exposeStack: !isProduction,
+    jwtSecret: readJwtSecret(source),
+    accessTokenTtlMinutes: readPositiveInteger(
+      source,
+      'ACCESS_TOKEN_TTL_MINUTES',
+      15,
+    ),
+    refreshTokenTtlDays: readPositiveInteger(
+      source,
+      'REFRESH_TOKEN_TTL_DAYS',
+      30,
+    ),
+    appUrl: readAppUrl(source),
+    smtp: readSmtp(source, isProduction),
+    mailFrom: readString(source, 'MAIL_FROM', 'Avengers <no-reply@localhost>'),
   })
 }

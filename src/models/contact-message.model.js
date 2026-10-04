@@ -1,10 +1,6 @@
 import mongoose from 'mongoose'
-
-export const CONTACT_MESSAGE_STATUSES = Object.freeze([
-  'new',
-  'read',
-  'replied',
-])
+import { CONTACT_MESSAGE_STATUSES } from '@constants/contact-message.js'
+import { publicJsonPlugin } from './plugins/public-json.plugin.js'
 
 const contactMessageSchema = new mongoose.Schema(
   {
@@ -16,6 +12,7 @@ const contactMessageSchema = new mongoose.Schema(
 )
 
 contactMessageSchema.index({ status: 1, createdAt: -1 })
+contactMessageSchema.plugin(publicJsonPlugin)
 
 export const ContactMessage = mongoose.model(
   'ContactMessage',

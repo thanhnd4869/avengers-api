@@ -84,6 +84,15 @@ export class ConflictError extends AppError {
   }
 }
 
+export class TooManyRequestsError extends AppError {
+  constructor(message = 'Too many requests', options = {}) {
+    super(message, HTTP_STATUS.TOO_MANY_REQUESTS, {
+      code: ERROR_CODE.RATE_LIMITED,
+      ...options,
+    })
+  }
+}
+
 export class ServiceUnavailableError extends AppError {
   constructor(message = 'Service unavailable', options = {}) {
     super(message, HTTP_STATUS.SERVICE_UNAVAILABLE, {

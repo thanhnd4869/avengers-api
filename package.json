@@ -27,6 +27,7 @@
     "start": "node --import ./alias-hooks.js src/index.js",
     "dev": "nodemon",
     "seed": "node --import ./alias-hooks.js scripts/seed.js",
+    "create-admin": "node --import ./alias-hooks.js scripts/create-admin.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
@@ -47,7 +48,9 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
+    "jose": "^6.2.12",
     "mongoose": "^9.10.0",
+    "nodemailer": "^10.0.14",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0"
   },
