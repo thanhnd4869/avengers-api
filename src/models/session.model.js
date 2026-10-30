@@ -25,6 +25,10 @@ const sessionSchema = new mongoose.Schema(
     rotatedAt: { type: Date, default: null },
     // Whether the cookie outlives the browser session.
     persistent: { type: Boolean, default: false },
+    // When the visitor last proved who they are (sign-in, or confirming with
+    // Google or Facebook). An account without a password must have done so
+    // recently before changing its email or deleting itself.
+    authenticatedAt: { type: Date, default: null },
     userAgent: { type: String, default: '' },
     ip: { type: String, default: '' },
     expiresAt: { type: Date, required: true },

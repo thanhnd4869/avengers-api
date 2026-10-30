@@ -144,6 +144,54 @@ created only with `npm run create-admin`; sign-up always creates `user`.
 Login is limited to 10 attempts per 15 minutes per IP, and sign-up and email
 sending to 5 per hour (20 times more in development).
 
+### Sign-in with Google and Facebook
+
+| Method   | Path                                    | Auth     | Description                                               |
+| -------- | --------------------------------------- | -------- | --------------------------------------------------------- |
+| `GET`    | `/api/v1/auth/oauth/providers`          | –        | Providers with credentials, e.g. `["google","facebook"]`  |
+| `POST`   | `/api/v1/auth/oauth/:provider/start`    | optional | `{ intent, remember, redirect }`; answers `{ url }`       |
+| `GET`    | `/api/v1/auth/oauth/:provider/callback` | cookie   | Provider redirect; sends the visitor to `/oauth/callback` |
+| `GET`    | `/api/v1/auth/identities`               | token    | Connected Google and Facebook accounts                    |
+| `DELETE` | `/api/v1/auth/identities/:provider`     | token    | Disconnects one; `409` if it is the last way to sign in   |
+| `POST`   | `/api/v1/auth/change-email/resend`      | token    | Sends the pending address's confirmation link again       |
+
+The browser asks `start` for the provider's URL and goes there. The flow
+(intent, PKCE verifier, `state`) is signed into an `httpOnly` cookie scoped to
+`/api/v1/auth/oauth`, so the callback only completes in the browser that began
+it. The callback then sets the refresh cookie, like a password sign-in, and
+redirects to `$APP_URL/oauth/callback?status=...` or `?error=<code>`; the
+provider's own wording never reaches the visitor.
+
+`intent` is `login` (sign in or up), `link` (connect to the signed-in account)
+or `reauth` (confirm it is you; see below). Register
+`$API_URL/api/v1/auth/oauth/<provider>/callback` as the redirect URI with each
+provider.
+
+How a provider account is matched:
+
+- A provider account seen before signs straight in to its user.
+- Google reports whether it verified the address. A verified address links to
+  the account that has it. If that account never confirmed its address, the
+  password chosen at sign-up may not be the owner's, so it is removed and every
+  session ends.
+- Facebook does not say whether it verified an address, so its address never
+  links or claims an account. A new account starts without an address, and the
+  one Facebook shared waits as `pendingEmail` until its link is followed. An
+  address already used by another account is refused with
+  `?error=account_exists`.
+- A Facebook account that shares no address signs in without one; `email` is
+  `null` until the owner adds and confirms one.
+
+An account without a password (`hasPassword: false`) sets one through
+`forgot-password`. To change its email or delete itself it must have signed in,
+or confirmed with a provider (`intent: reauth`), within the last 10 minutes;
+otherwise the API answers `403` with code `REAUTH_REQUIRED`.
+
+`npm run mock-oauth` starts a stand-in for both providers on port 8090. Set
+`OAUTH_MOCK_URL=http://localhost:8090` to use it without real credentials. A
+database created before email became optional must run
+`npm run migrate:email-index` once.
+
 Account changes that need the current password (changing the password or the
 email, deleting the account) answer `400` with a field error when it is wrong,
 not `401`, because the session itself is still valid. Changing the password
@@ -167,6 +215,8 @@ All scripts are compatible with Windows, Ubuntu, and macOS.
 | `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes            |
 | `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data   |
 | `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`)  |
+| `npm run migrate:email-index`                      | Makes `users.email` optional (partial unique index); safe to run again           |
+| `npm run mock-oauth`                               | Development stand-in for Google and Facebook on port 8090                        |
 | `npm run lint`                                     | Checks JavaScript files with ESLint                                              |
 | `npm run lint:fix`                                 | Fixes automatically repairable ESLint issues                                     |
 | `npm run format`                                   | Formats supported project files with Prettier                                    |

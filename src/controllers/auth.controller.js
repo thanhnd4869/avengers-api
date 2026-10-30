@@ -21,12 +21,16 @@ export function createAuthController({ authService, isProduction }) {
     path: `${API_PREFIX}/auth`,
   }
 
-  function sendSession(response, status, result) {
+  function setRefreshCookie(response, result) {
     response.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
       ...cookieOptions,
       // Without `expires` the browser drops the cookie when it closes.
       ...(result.persistent ? { expires: result.refreshExpiresAt } : {}),
     })
+  }
+
+  function sendSession(response, status, result) {
+    setRefreshCookie(response, result)
 
     response.status(status).json({
       data: { user: result.user, accessToken: result.accessToken },
@@ -34,6 +38,10 @@ export function createAuthController({ authService, isProduction }) {
   }
 
   return {
+    // Shared with the Google and Facebook callback, which starts a session
+    // the same way but answers with a redirect instead of JSON.
+    setRefreshCookie,
+
     async register(request, response) {
       sendSession(
         response,
@@ -119,12 +127,13 @@ export function createAuthController({ authService, isProduction }) {
     async requestEmailChange(request, response) {
       response
         .status(HTTP_STATUS.OK)
-        .json(
-          await authService.requestEmailChange(
-            request.auth.userId,
-            request.body,
-          ),
-        )
+        .json(await authService.requestEmailChange(request.auth, request.body))
+    },
+
+    async resendEmailChange(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(await authService.resendEmailChange(request.auth.userId))
     },
 
     async cancelEmailChange(request, response) {
@@ -140,7 +149,7 @@ export function createAuthController({ authService, isProduction }) {
     },
 
     async deleteAccount(request, response) {
-      await authService.deleteAccount(request.auth.userId, request.body)
+      await authService.deleteAccount(request.auth, request.body)
       response.clearCookie(REFRESH_COOKIE_NAME, cookieOptions)
       response.status(HTTP_STATUS.NO_CONTENT).end()
     },

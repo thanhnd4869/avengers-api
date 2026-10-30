@@ -140,15 +140,23 @@ export function validateChangePasswordBody(body = {}) {
   }
 }
 
+// An account that signs in with Google or Facebook only has no password to
+// type, so it may be left out; the service decides whether it was required.
+function parseOptionalPassword(value) {
+  return value === undefined || value === null || value === ''
+    ? null
+    : parseExistingPassword(value)
+}
+
 export function validateChangeEmailBody(body = {}) {
   return {
     email: parseEmail(body.email),
-    password: parseExistingPassword(body.password),
+    password: parseOptionalPassword(body.password),
   }
 }
 
 export function validatePasswordBody(body = {}) {
-  return { password: parseExistingPassword(body.password) }
+  return { password: parseOptionalPassword(body.password) }
 }
 
 export { parseEmail }

@@ -8,6 +8,7 @@ import { createContactMessageController } from '@controllers/contact-message.con
 import { createHealthController } from '@controllers/health.controller.js'
 import { createHomeController } from '@controllers/home.controller.js'
 import { createMediaController } from '@controllers/media.controller.js'
+import { createOAuthController } from '@controllers/oauth.controller.js'
 import { createPlatformController } from '@controllers/platform.controller.js'
 import { createPostCategoryController } from '@controllers/post-category.controller.js'
 import { createPostController } from '@controllers/post.controller.js'
@@ -25,6 +26,7 @@ import * as postRepository from '@repositories/post.repository.js'
 import * as productRepository from '@repositories/product.repository.js'
 import * as sessionRepository from '@repositories/session.repository.js'
 import * as socialLinkRepository from '@repositories/social-link.repository.js'
+import * as userIdentityRepository from '@repositories/user-identity.repository.js'
 import * as userTokenRepository from '@repositories/user-token.repository.js'
 import * as userRepository from '@repositories/user.repository.js'
 import { createHealthRouter } from '@routes/health.routes.js'
@@ -36,6 +38,7 @@ import { createContactMessageService } from '@services/contact-message.service.j
 import { createHealthService } from '@services/health.service.js'
 import { createHomeService } from '@services/home.service.js'
 import { createMediaService } from '@services/media.service.js'
+import { createOAuthService } from '@services/oauth.service.js'
 import { createPlatformService } from '@services/platform.service.js'
 import { createPostCategoryService } from '@services/post-category.service.js'
 import { createPostService } from '@services/post.service.js'
@@ -43,6 +46,14 @@ import { createProductService } from '@services/product.service.js'
 import { createSocialLinkService } from '@services/social-link.service.js'
 import { createAccessTokenSigner } from '@utils/jwt.js'
 import { createMailer } from '@utils/mailer.js'
+import {
+  OAUTH_FLOW_TTL_SECONDS,
+  createOAuthFlowSigner,
+} from '@utils/oauth-flow.js'
+import {
+  codeChallengeFor,
+  createOAuthProviders,
+} from '@utils/oauth-providers.js'
 import { createApp } from './app.js'
 import {
   describeListenError,
@@ -99,6 +110,7 @@ const authService = createAuthService({
   userRepository,
   sessionRepository,
   userTokenRepository,
+  userIdentityRepository,
   accessTokens: createAccessTokenSigner({
     secret: environment.jwtSecret,
     ttlMinutes: environment.accessTokenTtlMinutes,
@@ -116,6 +128,33 @@ const authController = createAuthController({
   authService,
   isProduction: environment.isProduction,
 })
+const oauthProviders = createOAuthProviders(environment.oauth)
+const oauthController = createOAuthController({
+  oauthService: createOAuthService({
+    providers: oauthProviders,
+    flowSigner: createOAuthFlowSigner({ secret: environment.jwtSecret }),
+    codeChallengeFor,
+    authService,
+    userRepository,
+    userIdentityRepository,
+    userTokenRepository,
+    sessionRepository,
+    appUrl: environment.appUrl,
+    logger,
+  }),
+  setRefreshCookie: authController.setRefreshCookie,
+  isProduction: environment.isProduction,
+  flowTtlSeconds: OAUTH_FLOW_TTL_SECONDS,
+})
+
+if (environment.oauth.mockUrl) {
+  logger.warn(
+    `Sign-in with Google and Facebook uses the mock provider at ${environment.oauth.mockUrl}`,
+  )
+} else if (Object.keys(oauthProviders).length === 0) {
+  logger.info('Sign-in with Google and Facebook is off: no credentials set')
+}
+
 const auth = createAuthMiddlewares({
   resolveAccessToken: authService.authenticateAccessToken,
 })
@@ -137,6 +176,7 @@ const app = createApp({
     socialLinkController,
     contactMessageController,
     authController,
+    oauthController,
     adminContactMessageController,
     auth,
     authRateLimits: createAuthRateLimits(environment),

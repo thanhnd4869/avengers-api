@@ -22,6 +22,7 @@ export function createRouter({
   socialLinkController,
   contactMessageController,
   authController,
+  oauthController,
   adminContactMessageController,
   auth,
   authRateLimits,
@@ -30,7 +31,12 @@ export function createRouter({
 
   router.use(
     '/auth',
-    createAuthRouter({ authController, auth, rateLimits: authRateLimits }),
+    createAuthRouter({
+      authController,
+      oauthController,
+      auth,
+      rateLimits: authRateLimits,
+    }),
   )
   router.use(
     '/admin',

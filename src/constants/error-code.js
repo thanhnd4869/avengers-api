@@ -15,6 +15,13 @@ export const ERROR_CODE = Object.freeze({
   EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
   EMAIL_ALREADY_VERIFIED: 'EMAIL_ALREADY_VERIFIED',
   EMAIL_TAKEN: 'EMAIL_TAKEN',
+  // The account has no address yet (a Facebook sign-up that shared none).
+  NO_EMAIL: 'NO_EMAIL',
+  // An account without a password must confirm with Google or Facebook
+  // before a sensitive change.
+  REAUTH_REQUIRED: 'REAUTH_REQUIRED',
+  // Removing this would leave the account with no way to sign in.
+  LAST_SIGN_IN_METHOD: 'LAST_SIGN_IN_METHOD',
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',

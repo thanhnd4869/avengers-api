@@ -7,8 +7,22 @@ export function isDuplicateKeyError(error) {
   return error?.code === DUPLICATE_KEY
 }
 
-export function createUser({ email, displayName, passwordHash, role }) {
-  return User.create({ email, displayName, passwordHash, role })
+export function createUser({
+  email,
+  displayName,
+  passwordHash,
+  role,
+  hasPassword = true,
+  emailVerifiedAt = null,
+}) {
+  return User.create({
+    email,
+    displayName,
+    passwordHash,
+    role,
+    hasPassword,
+    emailVerifiedAt,
+  })
 }
 
 export function findUserById(userId) {
@@ -36,7 +50,30 @@ export function findUserByIdWithPassword(userId) {
 }
 
 export function updatePasswordHash(userId, passwordHash) {
-  return User.updateOne({ _id: userId }, { $set: { passwordHash } })
+  return User.updateOne(
+    { _id: userId },
+    { $set: { passwordHash, hasPassword: true } },
+  )
+}
+
+/**
+ * Takes an unverified account over for whoever proved they own its address
+ * through Google: the password chosen at sign-up, and any address change it
+ * started, may belong to someone else and are dropped.
+ */
+export function detachPassword(userId, at = new Date()) {
+  return User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        passwordHash: null,
+        hasPassword: false,
+        pendingEmail: null,
+        emailVerifiedAt: at,
+      },
+    },
+    { returnDocument: 'after' },
+  )
 }
 
 export function updateDisplayName(userId, displayName) {
@@ -68,6 +105,18 @@ export function applyPendingEmail(userId, email, at = new Date()) {
   )
 }
 
+/**
+ * Gives an account with no address yet the one Google verified. Matching on
+ * `email: null` means it never overwrites an address the owner chose.
+ */
+export function setVerifiedEmail(userId, email, at = new Date()) {
+  return User.findOneAndUpdate(
+    { _id: userId, email: null },
+    { $set: { email, emailVerifiedAt: at, pendingEmail: null } },
+    { returnDocument: 'after' },
+  )
+}
+
 export function deleteUserById(userId) {
   return User.deleteOne({ _id: userId })
 }
@@ -80,7 +129,14 @@ export async function upsertAdmin({ email, displayName, passwordHash }) {
   const filter = { email: email.toLowerCase() }
   const admin = await User.findOneAndUpdate(
     filter,
-    { $set: { displayName, passwordHash, role: USER_ROLE.ADMIN } },
+    {
+      $set: {
+        displayName,
+        passwordHash,
+        hasPassword: true,
+        role: USER_ROLE.ADMIN,
+      },
+    },
     {
       upsert: true,
       returnDocument: 'after',

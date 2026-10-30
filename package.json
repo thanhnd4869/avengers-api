@@ -28,6 +28,8 @@
     "dev": "nodemon",
     "seed": "node --import ./alias-hooks.js scripts/seed.js",
     "create-admin": "node --import ./alias-hooks.js scripts/create-admin.js",
+    "migrate:email-index": "node --import ./alias-hooks.js scripts/migrate-email-index.js",
+    "mock-oauth": "node scripts/mock-oauth.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",

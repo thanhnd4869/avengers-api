@@ -22,7 +22,16 @@ export async function replaceUserSession({
     userAgent,
     ip,
     expiresAt,
+    authenticatedAt: new Date(),
   })
+}
+
+/** Records a fresh proof of identity, such as confirming with Google. */
+export function markSessionAuthenticated(sessionId, at = new Date()) {
+  return Session.updateOne(
+    { _id: sessionId },
+    { $set: { authenticatedAt: at } },
+  )
 }
 
 export function findActiveSessionById(sessionId) {

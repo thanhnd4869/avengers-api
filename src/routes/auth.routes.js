@@ -1,7 +1,33 @@
 import { Router } from 'express'
 
-export function createAuthRouter({ authController, auth, rateLimits }) {
+export function createAuthRouter({
+  authController,
+  oauthController,
+  auth,
+  rateLimits,
+}) {
   const router = Router()
+
+  // Sign-in with Google or Facebook. `start` answers the provider URL for the
+  // browser to open; the provider then sends the visitor to `callback`.
+  router.get('/oauth/providers', oauthController.listProviders)
+  router.post(
+    '/oauth/:provider/start',
+    rateLimits.login,
+    auth.optionalAuth,
+    oauthController.start,
+  )
+  router.get(
+    '/oauth/:provider/callback',
+    rateLimits.login,
+    oauthController.callback,
+  )
+  router.get('/identities', auth.authenticate, oauthController.listIdentities)
+  router.delete(
+    '/identities/:provider',
+    auth.authenticate,
+    oauthController.unlink,
+  )
 
   router.post('/register', rateLimits.register, authController.register)
   router.post('/login', rateLimits.login, authController.login)
@@ -46,6 +72,12 @@ export function createAuthRouter({ authController, auth, rateLimits }) {
     '/change-email',
     auth.authenticate,
     authController.cancelEmailChange,
+  )
+  router.post(
+    '/change-email/resend',
+    rateLimits.email,
+    auth.authenticate,
+    authController.resendEmailChange,
   )
   router.post('/change-email/confirm', authController.confirmEmailChange)
 

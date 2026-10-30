@@ -82,15 +82,54 @@ function readPositiveInteger(source, key, fallback) {
   return value
 }
 
-function readAppUrl(source) {
-  const raw = readString(source, 'APP_URL', 'http://localhost:3000')
+function readUrl(source, key, fallback) {
+  const raw = readString(source, key, fallback)
 
   try {
-    // Links in emails are built from this, so a trailing slash would double up.
+    // Links are built by appending a path, so a trailing slash would double up.
     return new URL(raw).href.replace(/\/$/, '')
   } catch {
-    throw new RangeError('APP_URL must be an absolute URL')
+    throw new RangeError(`${key} must be an absolute URL`)
   }
+}
+
+function readAppUrl(source) {
+  return readUrl(source, 'APP_URL', 'http://localhost:3000')
+}
+
+/**
+ * Sign-in with Google or Facebook is offered only for providers whose id and
+ * secret are both set. In development, `OAUTH_MOCK_URL` points every provider
+ * at `npm run mock-oauth` instead, so the flow can be tried without real apps;
+ * production refuses it.
+ */
+function readOAuth(source, isProduction) {
+  const mockUrl = readString(source, 'OAUTH_MOCK_URL', '')
+
+  if (mockUrl !== '' && isProduction) {
+    throw new RangeError('OAUTH_MOCK_URL must not be set in production')
+  }
+
+  const provider = (idKey, secretKey) => {
+    const clientId = readString(source, idKey, mockUrl ? 'mock-client' : '')
+    const clientSecret = readString(
+      source,
+      secretKey,
+      mockUrl ? 'mock-secret' : '',
+    )
+
+    return clientId && clientSecret
+      ? Object.freeze({ clientId, clientSecret })
+      : null
+  }
+
+  return Object.freeze({
+    // Where the providers send the visitor back: the API's own public origin.
+    apiUrl: readUrl(source, 'API_URL', `http://localhost:${readPort(source)}`),
+    mockUrl: mockUrl === '' ? null : readUrl(source, 'OAUTH_MOCK_URL', ''),
+    google: provider('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'),
+    facebook: provider('FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'),
+  })
 }
 
 /**
@@ -147,6 +186,7 @@ export function getEnvironment(source = process.env) {
       30,
     ),
     appUrl: readAppUrl(source),
+    oauth: readOAuth(source, isProduction),
     smtp: readSmtp(source, isProduction),
     mailFrom: readString(source, 'MAIL_FROM', 'Avengers <no-reply@localhost>'),
   })
