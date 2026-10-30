@@ -104,19 +104,25 @@ checks poll a fixed path and must never be throttled into a false negative.
 
 ### Authentication
 
-| Method  | Path                                 | Auth   | Description                                                 |
-| ------- | ------------------------------------ | ------ | ----------------------------------------------------------- |
-| `POST`  | `/api/v1/auth/register`              | –      | Creates a `user` account and signs it in                    |
-| `POST`  | `/api/v1/auth/login`                 | –      | `{ email, password, remember }`; ends any other session     |
-| `POST`  | `/api/v1/auth/refresh`               | cookie | Rotates the refresh cookie, returns a new access token      |
-| `POST`  | `/api/v1/auth/logout`                | cookie | Ends the session and clears the cookie                      |
-| `GET`   | `/api/v1/auth/me`                    | token  | The signed-in user                                          |
-| `POST`  | `/api/v1/auth/verify-email`          | –      | `{ token }` from the emailed link                           |
-| `POST`  | `/api/v1/auth/verify-email/resend`   | token  | Sends a new link; 60-second cooldown                        |
-| `POST`  | `/api/v1/auth/forgot-password`       | –      | `{ email }`; always `200`, so accounts cannot be discovered |
-| `POST`  | `/api/v1/auth/reset-password`        | –      | `{ token, password }`; signs the account out everywhere     |
-| `GET`   | `/api/v1/admin/contact-messages`     | admin  | `?page&limit&status=new\|read\|replied`                     |
-| `PATCH` | `/api/v1/admin/contact-messages/:id` | admin  | `{ status }`                                                |
+| Method   | Path                                 | Auth   | Description                                                 |
+| -------- | ------------------------------------ | ------ | ----------------------------------------------------------- |
+| `POST`   | `/api/v1/auth/register`              | –      | Creates a `user` account and signs it in                    |
+| `POST`   | `/api/v1/auth/login`                 | –      | `{ email, password, remember }`; ends any other session     |
+| `POST`   | `/api/v1/auth/refresh`               | cookie | Rotates the refresh cookie, returns a new access token      |
+| `POST`   | `/api/v1/auth/logout`                | cookie | Ends the session and clears the cookie                      |
+| `GET`    | `/api/v1/auth/me`                    | token  | The signed-in user                                          |
+| `POST`   | `/api/v1/auth/verify-email`          | –      | `{ token }` from the emailed link                           |
+| `POST`   | `/api/v1/auth/verify-email/resend`   | token  | Sends a new link; 60-second cooldown                        |
+| `POST`   | `/api/v1/auth/forgot-password`       | –      | `{ email }`; always `200`, so accounts cannot be discovered |
+| `POST`   | `/api/v1/auth/reset-password`        | –      | `{ token, password }`; signs the account out everywhere     |
+| `PATCH`  | `/api/v1/auth/me`                    | token  | `{ displayName }`                                           |
+| `DELETE` | `/api/v1/auth/me`                    | token  | `{ password }`; deletes the account, `403` for admins       |
+| `POST`   | `/api/v1/auth/change-password`       | token  | `{ currentPassword, newPassword }`; answers a new session   |
+| `POST`   | `/api/v1/auth/change-email`          | token  | `{ email, password }`; mails a link to the new address      |
+| `DELETE` | `/api/v1/auth/change-email`          | token  | Cancels a pending email change                              |
+| `POST`   | `/api/v1/auth/change-email/confirm`  | –      | `{ token }` from the link; switches the address             |
+| `GET`    | `/api/v1/admin/contact-messages`     | admin  | `?page&limit&status=new\|read\|replied`                     |
+| `PATCH`  | `/api/v1/admin/contact-messages/:id` | admin  | `{ status }`                                                |
 
 Sign-in, sign-up and refresh answer `{ data: { user, accessToken } }`. The
 access token (JWT, HS256, ~15 minutes) is sent as `Authorization: Bearer` and
@@ -138,8 +144,16 @@ created only with `npm run create-admin`; sign-up always creates `user`.
 Login is limited to 10 attempts per 15 minutes per IP, and sign-up and email
 sending to 5 per hour (20 times more in development).
 
-New passwords (sign-up, reset, `create-admin`) must be 8–128 characters and
-contain a lowercase letter, an uppercase letter, a number and a special
+Account changes that need the current password (changing the password or the
+email, deleting the account) answer `400` with a field error when it is wrong,
+not `401`, because the session itself is still valid. Changing the password
+keeps the current device signed in with a new session and cookie, and ends every
+other session. Changing the email keeps the old address until the link sent to
+the new one is followed; the account is then verified on the new address, and
+links mailed to the old one stop working.
+
+New passwords (sign-up, reset, change, `create-admin`) must be 8–128 characters
+and contain a lowercase letter, an uppercase letter, a number and a special
 character. Sign-in does not re-check these rules, so accounts created under
 older rules keep working.
 

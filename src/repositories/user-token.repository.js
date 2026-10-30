@@ -8,10 +8,16 @@ export function findLatestUserToken({ userId, type }) {
  * Issues a new token and drops any older unused one of the same kind, so only
  * the most recent email link works.
  */
-export async function replaceUserToken({ userId, type, tokenHash, expiresAt }) {
+export async function replaceUserToken({
+  userId,
+  type,
+  tokenHash,
+  expiresAt,
+  email = null,
+}) {
   await UserToken.deleteMany({ userId, type, usedAt: null })
 
-  return UserToken.create({ userId, type, tokenHash, expiresAt })
+  return UserToken.create({ userId, type, tokenHash, expiresAt, email })
 }
 
 /**
@@ -28,4 +34,8 @@ export function consumeUserToken({ type, tokenHash }) {
 
 export function deleteUserTokens({ userId, type }) {
   return UserToken.deleteMany({ userId, type })
+}
+
+export function deleteAllUserTokens(userId) {
+  return UserToken.deleteMany({ userId })
 }

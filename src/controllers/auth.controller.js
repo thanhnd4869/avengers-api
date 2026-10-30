@@ -95,5 +95,54 @@ export function createAuthController({ authService, isProduction }) {
         .status(HTTP_STATUS.OK)
         .json(await authService.resetPassword(request.body))
     },
+
+    async updateProfile(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(
+          await authService.updateProfile(request.auth.userId, request.body),
+        )
+    },
+
+    async changePassword(request, response) {
+      sendSession(
+        response,
+        HTTP_STATUS.OK,
+        await authService.changePassword(
+          request.auth,
+          request.body,
+          clientOf(request),
+        ),
+      )
+    },
+
+    async requestEmailChange(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(
+          await authService.requestEmailChange(
+            request.auth.userId,
+            request.body,
+          ),
+        )
+    },
+
+    async cancelEmailChange(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(await authService.cancelEmailChange(request.auth.userId))
+    },
+
+    async confirmEmailChange(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(await authService.confirmEmailChange(request.body))
+    },
+
+    async deleteAccount(request, response) {
+      await authService.deleteAccount(request.auth.userId, request.body)
+      response.clearCookie(REFRESH_COOKIE_NAME, cookieOptions)
+      response.status(HTTP_STATUS.NO_CONTENT).end()
+    },
   }
 }

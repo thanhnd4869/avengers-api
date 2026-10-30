@@ -54,13 +54,18 @@ export function parseNewPassword(value, field = 'password') {
 
 // Sign-in does not re-check strength: rules may tighten after an account was
 // created, and that must not lock its owner out.
-function parseExistingPassword(value) {
+function parseExistingPassword(value, field = 'password') {
   if (
     typeof value !== 'string' ||
     value === '' ||
     value.length > PASSWORD_MAX_LENGTH
   ) {
-    throw fieldError('password', 'Please enter your password.')
+    throw fieldError(
+      field,
+      field === 'password'
+        ? 'Please enter your password.'
+        : 'Please enter your current password.',
+    )
   }
 
   return value
@@ -119,6 +124,31 @@ export function validateResetPasswordBody(body = {}) {
     token: parseToken(body.token),
     password: parseNewPassword(body.password),
   }
+}
+
+export function validateProfileBody(body = {}) {
+  return { displayName: parseDisplayName(body.displayName) }
+}
+
+export function validateChangePasswordBody(body = {}) {
+  return {
+    currentPassword: parseExistingPassword(
+      body.currentPassword,
+      'currentPassword',
+    ),
+    newPassword: parseNewPassword(body.newPassword, 'newPassword'),
+  }
+}
+
+export function validateChangeEmailBody(body = {}) {
+  return {
+    email: parseEmail(body.email),
+    password: parseExistingPassword(body.password),
+  }
+}
+
+export function validatePasswordBody(body = {}) {
+  return { password: parseExistingPassword(body.password) }
 }
 
 export { parseEmail }

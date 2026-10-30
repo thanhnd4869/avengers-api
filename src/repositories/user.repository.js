@@ -31,8 +31,45 @@ export function markEmailVerified(userId, at = new Date()) {
   )
 }
 
+export function findUserByIdWithPassword(userId) {
+  return User.findById(userId).select('+passwordHash')
+}
+
 export function updatePasswordHash(userId, passwordHash) {
   return User.updateOne({ _id: userId }, { $set: { passwordHash } })
+}
+
+export function updateDisplayName(userId, displayName) {
+  return User.findByIdAndUpdate(
+    userId,
+    { $set: { displayName } },
+    { returnDocument: 'after', runValidators: true },
+  )
+}
+
+export function setPendingEmail(userId, pendingEmail) {
+  return User.findByIdAndUpdate(
+    userId,
+    { $set: { pendingEmail } },
+    { returnDocument: 'after' },
+  )
+}
+
+/**
+ * Switches to the address a change-email link confirmed. Matching on
+ * `pendingEmail` means a cancelled or superseded request cannot be applied.
+ * The unique email index rejects an address taken in the meantime.
+ */
+export function applyPendingEmail(userId, email, at = new Date()) {
+  return User.findOneAndUpdate(
+    { _id: userId, pendingEmail: email },
+    { $set: { email, pendingEmail: null, emailVerifiedAt: at } },
+    { returnDocument: 'after' },
+  )
+}
+
+export function deleteUserById(userId) {
+  return User.deleteOne({ _id: userId })
 }
 
 /**

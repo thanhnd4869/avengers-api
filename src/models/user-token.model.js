@@ -18,6 +18,9 @@ const userTokenSchema = new mongoose.Schema(
       required: true,
     },
     tokenHash: { type: String, required: true, unique: true },
+    // The address a `change_email` link confirms, so the link can only ever
+    // switch the account to the address it was mailed to.
+    email: { type: String, default: null },
     expiresAt: { type: Date, required: true },
     usedAt: { type: Date, default: null },
   },

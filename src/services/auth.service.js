@@ -3,9 +3,11 @@ import { USER_ROLE, USER_TOKEN_TYPE } from '@constants/auth.js'
 import {
   BadRequestError,
   ConflictError,
+  ForbiddenError,
   TooManyRequestsError,
   UnauthorizedError,
 } from '@errors/app-error.js'
+import { changeEmailEmail } from '@utils/emails/change-email.email.js'
 import { resetPasswordEmail } from '@utils/emails/reset-password.email.js'
 import { verifyEmailEmail } from '@utils/emails/verify-email.email.js'
 import {
@@ -14,9 +16,14 @@ import {
   verifyPassword,
 } from '@utils/password.js'
 import { generateToken, hashToken } from '@utils/token.js'
+import { fieldError } from '@validations/query.validation.js'
 import {
+  validateChangeEmailBody,
+  validateChangePasswordBody,
   validateEmailBody,
   validateLoginBody,
+  validatePasswordBody,
+  validateProfileBody,
   validateRegisterBody,
   validateResetPasswordBody,
   validateTokenBody,
@@ -25,6 +32,7 @@ import {
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
 const VERIFY_EMAIL_TTL_HOURS = 24
+const CHANGE_EMAIL_TTL_HOURS = 24
 const RESET_PASSWORD_TTL_MINUTES = 60
 const EMAIL_COOLDOWN_SECONDS = 60
 // Two tabs refreshing at the same moment present the same token. The one that
@@ -46,6 +54,15 @@ function invalidCredentials() {
   // does not reveal which addresses have an account.
   return new UnauthorizedError('Incorrect email or password.', {
     code: ERROR_CODE.INVALID_CREDENTIALS,
+  })
+}
+
+function emailTaken() {
+  return new ConflictError('An account with this email already exists.', {
+    code: ERROR_CODE.EMAIL_TAKEN,
+    details: [
+      { field: 'email', message: 'An account with this email already exists.' },
+    ],
   })
 }
 
@@ -108,7 +125,10 @@ export function createAuthService({
     }
   }
 
-  async function sendTokenEmail(user, { type, ttlMs, path, render }) {
+  async function sendTokenEmail(
+    user,
+    { type, ttlMs, path, render, to = user.email, email = null },
+  ) {
     const token = generateToken()
 
     await userTokenRepository.replaceUserToken({
@@ -116,11 +136,29 @@ export function createAuthService({
       type,
       tokenHash: hashToken(token),
       expiresAt: new Date(Date.now() + ttlMs),
+      email,
     })
 
     const url = `${appUrl}${path}?token=${encodeURIComponent(token)}`
 
-    await mailer.send({ to: user.email, ...render(url) })
+    await mailer.send({ to, ...render(url) })
+  }
+
+  /** Loads the signed-in user and checks the password they typed again. */
+  async function confirmPassword(userId, password, field = 'password') {
+    const user = await userRepository.findUserByIdWithPassword(userId)
+
+    if (!user) {
+      throw sessionRevoked()
+    }
+
+    if (!(await verifyPassword(password, user.passwordHash))) {
+      // 400 rather than 401: the session is fine, and a 401 would make the
+      // client try to refresh it.
+      throw fieldError(field, 'The password is incorrect.')
+    }
+
+    return user
   }
 
   function sendVerificationEmail(user) {
@@ -166,18 +204,7 @@ export function createAuthService({
         })
       } catch (error) {
         if (userRepository.isDuplicateKeyError(error)) {
-          throw new ConflictError(
-            'An account with this email already exists.',
-            {
-              code: ERROR_CODE.EMAIL_TAKEN,
-              details: [
-                {
-                  field: 'email',
-                  message: 'An account with this email already exists.',
-                },
-              ],
-            },
-          )
+          throw emailTaken()
         }
 
         throw error
@@ -316,7 +343,10 @@ export function createAuthService({
       ])
 
       if (!user) {
-        throw sessionRevoked()
+        // The account was deleted; nobody else took the session over.
+        throw new UnauthorizedError('Your session has ended.', {
+          code: ERROR_CODE.SESSION_ENDED,
+        })
       }
 
       if (!session || String(session.userId) !== String(user._id)) {
@@ -461,6 +491,169 @@ export function createAuthService({
           message: 'Your password was changed. Please sign in again.',
         },
       }
+    },
+
+    async updateProfile(userId, body) {
+      const { displayName } = validateProfileBody(body)
+      const user = await userRepository.updateDisplayName(userId, displayName)
+
+      if (!user) {
+        throw sessionRevoked()
+      }
+
+      return { data: user }
+    },
+
+    /**
+     * Keeps this device signed in under a new session. Every other device,
+     * and any token issued before, stops working, as does an unused reset
+     * link that would otherwise undo the change.
+     */
+    async changePassword({ userId, sessionId }, body, client) {
+      const { currentPassword, newPassword } = validateChangePasswordBody(body)
+      const user = await confirmPassword(
+        userId,
+        currentPassword,
+        'currentPassword',
+      )
+      const session = await sessionRepository.findActiveSessionById(sessionId)
+
+      await userRepository.updatePasswordHash(
+        user._id,
+        await hashPassword(newPassword),
+      )
+      await userTokenRepository.deleteUserTokens({
+        userId: user._id,
+        type: USER_TOKEN_TYPE.RESET_PASSWORD,
+      })
+
+      return issueSession(user, {
+        persistent: session?.persistent ?? false,
+        client,
+      })
+    },
+
+    /**
+     * Mails a link to the new address. The account keeps the current one
+     * until that link is followed, so a typo cannot lock its owner out.
+     */
+    async requestEmailChange(userId, body) {
+      const { email, password } = validateChangeEmailBody(body)
+      const user = await confirmPassword(userId, password)
+
+      if (email === user.email) {
+        throw fieldError('email', 'This is already your email address.')
+      }
+
+      if (await userRepository.findUserByEmail(email)) {
+        throw emailTaken()
+      }
+
+      const wait = await secondsUntilResendAllowed(
+        user._id,
+        USER_TOKEN_TYPE.CHANGE_EMAIL,
+      )
+
+      if (wait > 0) {
+        throw new TooManyRequestsError(
+          `Please wait ${wait} seconds before requesting another email.`,
+          { details: [{ field: 'retryAfter', message: String(wait) }] },
+        )
+      }
+
+      const updated = await userRepository.setPendingEmail(user._id, email)
+
+      await sendTokenEmail(user, {
+        type: USER_TOKEN_TYPE.CHANGE_EMAIL,
+        ttlMs: CHANGE_EMAIL_TTL_HOURS * HOUR,
+        path: '/confirm-email',
+        to: email,
+        email,
+        render: (url) =>
+          changeEmailEmail({
+            displayName: user.displayName,
+            email,
+            url,
+            ttlHours: CHANGE_EMAIL_TTL_HOURS,
+          }),
+      })
+
+      return { data: updated }
+    },
+
+    async cancelEmailChange(userId) {
+      await userTokenRepository.deleteUserTokens({
+        userId,
+        type: USER_TOKEN_TYPE.CHANGE_EMAIL,
+      })
+      const user = await userRepository.setPendingEmail(userId, null)
+
+      if (!user) {
+        throw sessionRevoked()
+      }
+
+      return { data: user }
+    },
+
+    async confirmEmailChange(body) {
+      const { token } = validateTokenBody(body)
+      const used = await userTokenRepository.consumeUserToken({
+        type: USER_TOKEN_TYPE.CHANGE_EMAIL,
+        tokenHash: hashToken(token),
+      })
+
+      if (!used?.email) {
+        throw invalidLink()
+      }
+
+      let user
+
+      try {
+        user = await userRepository.applyPendingEmail(used.userId, used.email)
+      } catch (error) {
+        // Someone signed up with the address after the link was sent.
+        if (userRepository.isDuplicateKeyError(error)) {
+          await userRepository.setPendingEmail(used.userId, null)
+          throw emailTaken()
+        }
+
+        throw error
+      }
+
+      if (!user) {
+        throw invalidLink()
+      }
+
+      // Links mailed to the old address must not act on the account anymore.
+      await Promise.all([
+        userTokenRepository.deleteUserTokens({
+          userId: user._id,
+          type: USER_TOKEN_TYPE.RESET_PASSWORD,
+        }),
+        userTokenRepository.deleteUserTokens({
+          userId: user._id,
+          type: USER_TOKEN_TYPE.VERIFY_EMAIL,
+        }),
+      ])
+
+      return { data: user }
+    },
+
+    async deleteAccount(userId, body) {
+      const { password } = validatePasswordBody(body)
+      const user = await confirmPassword(userId, password)
+
+      // Admins are managed with `npm run create-admin`; deleting the last one
+      // from a browser would leave nobody able to run the shop.
+      if (user.role === USER_ROLE.ADMIN) {
+        throw new ForbiddenError(
+          'Administrator accounts cannot be deleted from the account page.',
+        )
+      }
+
+      await sessionRepository.deleteSessionsByUserId(user._id)
+      await userTokenRepository.deleteAllUserTokens(user._id)
+      await userRepository.deleteUserById(user._id)
     },
   }
 }

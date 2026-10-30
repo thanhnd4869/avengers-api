@@ -23,6 +23,9 @@ const userSchema = new mongoose.Schema(
       default: USER_ROLE.USER,
     },
     emailVerifiedAt: { type: Date, default: null },
+    // A requested new address, waiting for the link mailed to it. The account
+    // keeps signing in with `email` until then.
+    pendingEmail: { type: String, default: null, lowercase: true, trim: true },
   },
   { timestamps: true, collection: 'users' },
 )
