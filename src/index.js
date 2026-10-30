@@ -44,7 +44,11 @@ import { createSocialLinkService } from '@services/social-link.service.js'
 import { createAccessTokenSigner } from '@utils/jwt.js'
 import { createMailer } from '@utils/mailer.js'
 import { createApp } from './app.js'
-import { registerShutdownHandlers, startServer } from './server.js'
+import {
+  describeListenError,
+  registerShutdownHandlers,
+  startServer,
+} from './server.js'
 
 loadEnvironmentFile()
 
@@ -142,12 +146,20 @@ const app = createApp({
   logger,
 })
 
-const server = startServer({
-  app,
-  hostname: environment.hostname,
-  port: environment.port,
-  logger,
-})
+let server
+
+try {
+  server = await startServer({
+    app,
+    hostname: environment.hostname,
+    port: environment.port,
+    logger,
+  })
+} catch (error) {
+  logger.fatal({ err: error }, describeListenError(error, environment))
+  await disconnectDatabase()
+  process.exit(1)
+}
 
 registerShutdownHandlers({
   server,

@@ -1,9 +1,32 @@
+/**
+ * Resolves once the port is bound. Express 5 hands a listen failure (such as
+ * the port being taken by another instance) to this callback instead of
+ * throwing, so it must be checked or the process keeps running unreachable.
+ */
 export function startServer({ app, hostname, port, logger }) {
-  const server = app.listen(port, hostname, () => {
-    logger.info(`Avengers API is running at http://${hostname}:${port}/`)
-  })
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, hostname, (error) => {
+      if (error) {
+        reject(error)
+        return
+      }
 
-  return server
+      logger.info(`Avengers API is running at http://${hostname}:${port}/`)
+      resolve(server)
+    })
+  })
+}
+
+export function describeListenError(error, { hostname, port }) {
+  if (error.code === 'EADDRINUSE') {
+    return `Port ${port} on ${hostname} is already in use; stop the other process or set another PORT`
+  }
+
+  if (error.code === 'EACCES') {
+    return `No permission to listen on port ${port}`
+  }
+
+  return 'Could not start the HTTP server'
 }
 
 /**
