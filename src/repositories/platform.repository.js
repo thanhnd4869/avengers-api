@@ -1,6 +1,6 @@
-import { Platform } from '@models/platform.model.js'
-import { Product } from '@models/product.model.js'
-import { ProductVariant } from '@models/product-variant.model.js'
+import { Platform } from '#models/platform.model.js'
+import { Product } from '#models/product.model.js'
+import { ProductVariant } from '#models/product-variant.model.js'
 
 /**
  * Published platforms with the number of published products sold on each,

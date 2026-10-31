@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { CONTACT_MESSAGE_STATUSES } from '@constants/contact-message.js'
+import { CONTACT_MESSAGE_STATUSES } from '#constants/contact-message.js'
 import { publicJsonPlugin } from './plugins/public-json.plugin.js'
 
 const contactMessageSchema = new mongoose.Schema(

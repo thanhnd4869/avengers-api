@@ -1,4 +1,4 @@
-import { Media } from '@models/media.model.js'
+import { Media } from '#models/media.model.js'
 
 export function findPublishedMedia({ type, limit }) {
   return Media.find({ published: true, ...(type ? { type } : {}) })

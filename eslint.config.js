@@ -9,15 +9,17 @@ const restrictedImports = (...groups) => [
   },
 ]
 
-// Covers relative specifiers at any depth plus the `@layer/*` aliases resolved
-// by alias-hooks.js. Without the alias entries these rules would silently stop
-// catching cross-layer imports written as `@services/...`.
+// Covers relative specifiers at any depth plus the `#layer/*` subpath imports
+// declared in package.json. Without the alias entries these rules would
+// silently stop catching cross-layer imports written as `#services/...`.
+// The `#` is escaped because these are gitignore-style patterns, where a
+// leading `#` turns the whole entry into a comment.
 const layer = (name) => [
   `**/${name}/**`,
   `./${name}/**`,
   `../${name}/**`,
-  `@${name}/*`,
-  `@${name}/**`,
+  `\\#${name}/*`,
+  `\\#${name}/**`,
 ]
 
 const routes = layer('routes')

@@ -1,4 +1,4 @@
-import { validateMediaListQuery } from '@validations/media.validation.js'
+import { validateMediaListQuery } from '#validations/media.validation.js'
 
 export function createMediaService({ mediaRepository }) {
   return {

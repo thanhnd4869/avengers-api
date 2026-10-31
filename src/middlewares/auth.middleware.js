@@ -1,5 +1,5 @@
-import { ERROR_CODE } from '@constants/error-code.js'
-import { ForbiddenError, UnauthorizedError } from '@errors/app-error.js'
+import { ERROR_CODE } from '#constants/error-code.js'
+import { ForbiddenError, UnauthorizedError } from '#errors/app-error.js'
 
 const BEARER_PATTERN = /^Bearer\s+(\S+)$/i
 

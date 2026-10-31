@@ -1,4 +1,4 @@
-import { Session } from '@models/session.model.js'
+import { Session } from '#models/session.model.js'
 
 /**
  * Starts the only session of a user. Replacing in place (rather than delete

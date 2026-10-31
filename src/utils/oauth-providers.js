@@ -1,6 +1,6 @@
 import { createHash, createHmac } from 'node:crypto'
-import { API_PREFIX } from '@constants/api.js'
-import { OAUTH_PROVIDER } from '@constants/auth.js'
+import { API_PREFIX } from '#constants/api.js'
+import { OAUTH_PROVIDER } from '#constants/auth.js'
 
 const FACEBOOK_GRAPH_VERSION = 'v26.0'
 const REQUEST_TIMEOUT_MS = 10_000

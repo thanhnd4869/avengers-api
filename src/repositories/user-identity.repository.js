@@ -1,4 +1,4 @@
-import { UserIdentity } from '@models/user-identity.model.js'
+import { UserIdentity } from '#models/user-identity.model.js'
 
 const DUPLICATE_KEY = 11000
 

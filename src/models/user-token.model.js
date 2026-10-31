@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { USER_TOKEN_TYPE } from '@constants/auth.js'
+import { USER_TOKEN_TYPE } from '#constants/auth.js'
 
 /**
  * Single-use tokens mailed to a user to confirm an action. Only a hash is

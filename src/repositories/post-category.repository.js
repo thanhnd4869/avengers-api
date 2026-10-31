@@ -1,4 +1,4 @@
-import { PostCategory } from '@models/post-category.model.js'
+import { PostCategory } from '#models/post-category.model.js'
 
 export function findPostCategories({ excludedSlugs = [] } = {}) {
   return PostCategory.find({ slug: { $nin: excludedSlugs } })

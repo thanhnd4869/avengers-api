@@ -1,4 +1,4 @@
-import { validateProductListQuery } from '@validations/product.validation.js'
+import { validateProductListQuery } from '#validations/product.validation.js'
 import { toPaginatedResponse } from './pagination.js'
 
 export function createProductService({ productRepository }) {

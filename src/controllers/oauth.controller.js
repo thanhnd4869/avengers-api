@@ -1,7 +1,7 @@
-import { API_PREFIX } from '@constants/api.js'
-import { OAUTH_FLOW_COOKIE_NAME } from '@constants/auth.js'
-import { HTTP_STATUS } from '@constants/http-status.js'
-import { readCookie } from '@utils/cookie.js'
+import { API_PREFIX } from '#constants/api.js'
+import { OAUTH_FLOW_COOKIE_NAME } from '#constants/auth.js'
+import { HTTP_STATUS } from '#constants/http-status.js'
+import { readCookie } from '#utils/cookie.js'
 
 function clientOf(request) {
   return { ip: request.ip, userAgent: request.get('user-agent') }

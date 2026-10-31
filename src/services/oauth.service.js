@@ -1,16 +1,16 @@
-import { OAUTH_INTENT, USER_ROLE, USER_TOKEN_TYPE } from '@constants/auth.js'
-import { ERROR_CODE } from '@constants/error-code.js'
+import { OAUTH_INTENT, USER_ROLE, USER_TOKEN_TYPE } from '#constants/auth.js'
+import { ERROR_CODE } from '#constants/error-code.js'
 import {
   ConflictError,
   NotFoundError,
   UnauthorizedError,
-} from '@errors/app-error.js'
-import { generateToken } from '@utils/token.js'
+} from '#errors/app-error.js'
+import { generateToken } from '#utils/token.js'
 import {
   parseProvider,
   parseRedirect,
   validateOAuthStartBody,
-} from '@validations/oauth.validation.js'
+} from '#validations/oauth.validation.js'
 
 const DISPLAY_NAME_MIN_LENGTH = 2
 const DISPLAY_NAME_MAX_LENGTH = 32

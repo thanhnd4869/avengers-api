@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { USER_ROLE } from '@constants/auth.js'
+import { USER_ROLE } from '#constants/auth.js'
 import { publicJsonPlugin } from './plugins/public-json.plugin.js'
 
 const userSchema = new mongoose.Schema(

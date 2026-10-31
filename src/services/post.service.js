@@ -1,4 +1,4 @@
-import { validatePostListQuery } from '@validations/post.validation.js'
+import { validatePostListQuery } from '#validations/post.validation.js'
 import { toPaginatedResponse } from './pagination.js'
 
 // The populated reference is published as `category`, the name clients read.

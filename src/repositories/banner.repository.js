@@ -1,4 +1,4 @@
-import { Banner } from '@models/banner.model.js'
+import { Banner } from '#models/banner.model.js'
 
 export function findPublishedBanners({ limit }) {
   return Banner.find({ published: true })

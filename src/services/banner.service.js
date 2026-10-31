@@ -1,4 +1,4 @@
-import { validateBannerListQuery } from '@validations/banner.validation.js'
+import { validateBannerListQuery } from '#validations/banner.validation.js'
 
 export function createBannerService({ bannerRepository }) {
   return {

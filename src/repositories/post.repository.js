@@ -1,5 +1,5 @@
-import { Post } from '@models/post.model.js'
-import { PostCategory } from '@models/post-category.model.js'
+import { Post } from '#models/post.model.js'
+import { PostCategory } from '#models/post-category.model.js'
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

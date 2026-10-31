@@ -9,16 +9,16 @@
  */
 import { createInterface } from 'node:readline'
 import { parseArgs } from 'node:util'
-import { connectDatabase, disconnectDatabase } from '@config/database.js'
-import { getEnvironment, loadEnvironmentFile } from '@config/environment.js'
-import { createLogger } from '@config/logger.js'
-import { upsertAdmin } from '@repositories/user.repository.js'
-import { hashPassword } from '@utils/password.js'
+import { connectDatabase, disconnectDatabase } from '#config/database.js'
+import { getEnvironment, loadEnvironmentFile } from '#config/environment.js'
+import { createLogger } from '#config/logger.js'
+import { upsertAdmin } from '#repositories/user.repository.js'
+import { hashPassword } from '#utils/password.js'
 import {
   parseDisplayName,
   parseEmail,
   parseNewPassword,
-} from '@validations/auth.validation.js'
+} from '#validations/auth.validation.js'
 
 function askHidden(question) {
   return new Promise((resolve) => {

@@ -1,5 +1,5 @@
-import { USER_ROLE } from '@constants/auth.js'
-import { User } from '@models/user.model.js'
+import { USER_ROLE } from '#constants/auth.js'
+import { User } from '#models/user.model.js'
 
 const DUPLICATE_KEY = 11000
 

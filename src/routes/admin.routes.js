@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { USER_ROLE } from '@constants/auth.js'
+import { USER_ROLE } from '#constants/auth.js'
 
 /**
  * Everything under `/admin` is guarded once here, so a new admin route cannot

@@ -1,4 +1,4 @@
-import { SocialLink } from '@models/social-link.model.js'
+import { SocialLink } from '#models/social-link.model.js'
 
 export function findSocialLinks() {
   return SocialLink.find()

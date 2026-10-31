@@ -1,4 +1,4 @@
-import { validateContactMessageBody } from '@validations/contact-message.validation.js'
+import { validateContactMessageBody } from '#validations/contact-message.validation.js'
 
 export function createContactMessageService({ contactMessageRepository }) {
   return {

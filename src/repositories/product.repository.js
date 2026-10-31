@@ -1,6 +1,6 @@
-import { Platform } from '@models/platform.model.js'
-import { Product } from '@models/product.model.js'
-import { ProductVariant } from '@models/product-variant.model.js'
+import { Platform } from '#models/platform.model.js'
+import { Product } from '#models/product.model.js'
+import { ProductVariant } from '#models/product-variant.model.js'
 
 // `_id` breaks ties so paging stays stable when two products share a sort value.
 const SORT_ORDER = {

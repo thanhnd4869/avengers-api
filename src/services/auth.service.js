@@ -1,22 +1,22 @@
-import { ERROR_CODE } from '@constants/error-code.js'
-import { USER_ROLE, USER_TOKEN_TYPE } from '@constants/auth.js'
+import { ERROR_CODE } from '#constants/error-code.js'
+import { USER_ROLE, USER_TOKEN_TYPE } from '#constants/auth.js'
 import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
   TooManyRequestsError,
   UnauthorizedError,
-} from '@errors/app-error.js'
-import { changeEmailEmail } from '@utils/emails/change-email.email.js'
-import { resetPasswordEmail } from '@utils/emails/reset-password.email.js'
-import { verifyEmailEmail } from '@utils/emails/verify-email.email.js'
+} from '#errors/app-error.js'
+import { changeEmailEmail } from '#utils/emails/change-email.email.js'
+import { resetPasswordEmail } from '#utils/emails/reset-password.email.js'
+import { verifyEmailEmail } from '#utils/emails/verify-email.email.js'
 import {
   hashPassword,
   verifyAgainstDummy,
   verifyPassword,
-} from '@utils/password.js'
-import { generateToken, hashToken } from '@utils/token.js'
-import { fieldError } from '@validations/query.validation.js'
+} from '#utils/password.js'
+import { generateToken, hashToken } from '#utils/token.js'
+import { fieldError } from '#validations/query.validation.js'
 import {
   validateChangeEmailBody,
   validateChangePasswordBody,
@@ -27,7 +27,7 @@ import {
   validateRegisterBody,
   validateResetPasswordBody,
   validateTokenBody,
-} from '@validations/auth.validation.js'
+} from '#validations/auth.validation.js'
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR

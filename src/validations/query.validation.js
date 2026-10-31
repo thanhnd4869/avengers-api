@@ -1,4 +1,4 @@
-import { ValidationError } from '@errors/app-error.js'
+import { ValidationError } from '#errors/app-error.js'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 

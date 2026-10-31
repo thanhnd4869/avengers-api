@@ -284,24 +284,25 @@ bypass these static dependency restrictions.
 
 ### Import Alias
 
-Cross-layer imports use an `@layer/*` alias instead of a relative path, so a
+Cross-layer imports use a `#layer/*` alias instead of a relative path, so a
 specifier never depends on how deeply the importing file is nested:
 
 ```javascript
-import { HTTP_STATUS } from '@constants/http-status.js'
+import { HTTP_STATUS } from '#constants/http-status.js'
 ```
 
 Imports inside the same directory keep the relative form, which is why
 `index.js` still imports `./app.js` and `./server.js`.
 
-Node does not resolve `@` aliases on its own, so `alias-hooks.js` registers a
-resolve hook and is loaded through `node --import`. Every entry point that runs
-Node directly, including future scripts, Dockerfiles, and debugger launch
-configurations, must pass that flag or module resolution fails at startup.
+The aliases are Node's built-in
+[subpath imports](https://nodejs.org/api/packages.html#subpath-imports),
+declared in the `imports` field of `package.json`. Node, the editor, and any
+other tool that follows Node's resolution understand them without extra flags or
+configuration.
 
-Adding a new layer directory means updating three places: `ALIASED_LAYERS` in
-`alias-hooks.js` for the runtime, `paths` in `jsconfig.json` for the editor, and
-the layer list in `eslint.config.js` so the dependency rules keep applying.
+Adding a new layer directory means adding its entry to `imports` in
+`package.json`, plus the layer list in `eslint.config.js` if the dependency
+rules should cover it.
 
 ### Naming Convention
 
@@ -437,7 +438,7 @@ The following restrictions are enforced by ESLint:
   supplied by the composition root.
 - Dynamic imports and duplicate imports are prohibited.
 
-These restrictions match both relative specifiers and the `@layer/*` aliases, so
+These restrictions match both relative specifiers and the `#layer/*` aliases, so
 an alias cannot be used to bypass a layer boundary.
 
 Services may compose other focused services when useful. Avoid circular service

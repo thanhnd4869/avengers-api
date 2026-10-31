@@ -18,16 +18,29 @@
   "author": "ThanhND",
   "type": "module",
   "main": "src/index.js",
+  "imports": {
+    "#config/*": "./src/config/*",
+    "#constants/*": "./src/constants/*",
+    "#controllers/*": "./src/controllers/*",
+    "#errors/*": "./src/errors/*",
+    "#middlewares/*": "./src/middlewares/*",
+    "#models/*": "./src/models/*",
+    "#repositories/*": "./src/repositories/*",
+    "#routes/*": "./src/routes/*",
+    "#services/*": "./src/services/*",
+    "#utils/*": "./src/utils/*",
+    "#validations/*": "./src/validations/*"
+  },
   "engines": {
     "node": ">=24.11.0 <25",
     "npm": ">=11"
   },
   "packageManager": "npm@11.16.0",
   "scripts": {
-    "start": "node --import ./alias-hooks.js src/index.js",
+    "start": "node src/index.js",
     "dev": "nodemon",
-    "seed": "node --import ./alias-hooks.js scripts/seed.js",
-    "create-admin": "node --import ./alias-hooks.js scripts/create-admin.js",
+    "seed": "node scripts/seed.js",
+    "create-admin": "node scripts/create-admin.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",

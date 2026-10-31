@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { OAUTH_PROVIDER } from '@constants/auth.js'
+import { OAUTH_PROVIDER } from '#constants/auth.js'
 import { publicJsonPlugin } from './plugins/public-json.plugin.js'
 
 /**

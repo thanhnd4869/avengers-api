@@ -1,4 +1,4 @@
-import { UserToken } from '@models/user-token.model.js'
+import { UserToken } from '#models/user-token.model.js'
 
 export function findLatestUserToken({ userId, type }) {
   return UserToken.findOne({ userId, type }).sort({ createdAt: -1 })

@@ -3,21 +3,8 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "checkJs": false,
-    "paths": {
-      "@config/*": ["./src/config/*"],
-      "@constants/*": ["./src/constants/*"],
-      "@controllers/*": ["./src/controllers/*"],
-      "@errors/*": ["./src/errors/*"],
-      "@middlewares/*": ["./src/middlewares/*"],
-      "@models/*": ["./src/models/*"],
-      "@repositories/*": ["./src/repositories/*"],
-      "@routes/*": ["./src/routes/*"],
-      "@services/*": ["./src/services/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@validations/*": ["./src/validations/*"]
-    }
+    "checkJs": false
   },
-  "include": ["src/**/*", "scripts/**/*", "alias-hooks.js"],
+  "include": ["src/**/*", "scripts/**/*"],
   "exclude": ["node_modules"]
 }

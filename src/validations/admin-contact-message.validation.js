@@ -1,4 +1,4 @@
-import { CONTACT_MESSAGE_STATUSES } from '@constants/contact-message.js'
+import { CONTACT_MESSAGE_STATUSES } from '#constants/contact-message.js'
 import {
   fieldError,
   parseEnum,

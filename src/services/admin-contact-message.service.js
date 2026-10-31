@@ -1,9 +1,9 @@
-import { NotFoundError } from '@errors/app-error.js'
+import { NotFoundError } from '#errors/app-error.js'
 import {
   validateContactMessageId,
   validateContactMessageListQuery,
   validateContactMessageStatusBody,
-} from '@validations/admin-contact-message.validation.js'
+} from '#validations/admin-contact-message.validation.js'
 import { toPaginatedResponse } from './pagination.js'
 
 export function createAdminContactMessageService({ contactMessageRepository }) {

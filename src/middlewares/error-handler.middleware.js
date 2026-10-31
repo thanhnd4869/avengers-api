@@ -1,6 +1,6 @@
-import { ERROR_CODE } from '@constants/error-code.js'
-import { HTTP_STATUS } from '@constants/http-status.js'
-import { isOperationalError, ValidationError } from '@errors/app-error.js'
+import { ERROR_CODE } from '#constants/error-code.js'
+import { HTTP_STATUS } from '#constants/http-status.js'
+import { isOperationalError, ValidationError } from '#errors/app-error.js'
 
 // body-parser rejects unreadable payloads before any handler runs, so those
 // failures would otherwise be reported as internal faults.

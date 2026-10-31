@@ -1,4 +1,4 @@
-import { OAUTH_INTENT, OAUTH_PROVIDER } from '@constants/auth.js'
+import { OAUTH_INTENT, OAUTH_PROVIDER } from '#constants/auth.js'
 import { fieldError } from './query.validation.js'
 
 const PROVIDERS = Object.values(OAUTH_PROVIDER)
