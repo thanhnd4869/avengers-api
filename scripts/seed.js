@@ -15,6 +15,7 @@ import {
   MIGRATIONS_DIR,
 } from '#config/migrations.js'
 import { Banner } from '#models/banner.model.js'
+import { Cart } from '#models/cart.model.js'
 import { ContactMessage } from '#models/contact-message.model.js'
 import { Media } from '#models/media.model.js'
 import { Platform } from '#models/platform.model.js'
@@ -46,6 +47,7 @@ const MODELS = [
   ContactMessage,
   User,
   UserIdentity,
+  Cart,
 ]
 
 function idsBySlug(documents) {

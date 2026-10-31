@@ -180,6 +180,28 @@ one of its variants (on `platform`, if given) is priced within the range. The
 listing's `meta.priceRange` holds the cheapest and dearest price among the
 matches before the price filter, for a price slider.
 
+### Cart
+
+| Method   | Path                            | Auth  | Description                                                   |
+| -------- | ------------------------------- | ----- | ------------------------------------------------------------- |
+| `POST`   | `/api/v1/cart/preview`          | –     | `{ items: [{ variantId, quantity }] }`; prices a guest cart   |
+| `GET`    | `/api/v1/cart`                  | token | The signed-in shopper's cart                                  |
+| `POST`   | `/api/v1/cart/items`            | token | `{ variantId, quantity? }`; adds to the line, up to its limit |
+| `PATCH`  | `/api/v1/cart/items/:variantId` | token | `{ quantity }`                                                |
+| `DELETE` | `/api/v1/cart/items/:variantId` | token | Removes the line                                              |
+| `DELETE` | `/api/v1/cart`                  | token | Empties the cart                                              |
+| `POST`   | `/api/v1/cart/merge`            | token | `{ items }`; adds the guest cart in after signing in          |
+
+Guests keep their cart in the browser and the API prices it with `preview`. A
+cart stores only variant ids and quantities: names, prices and stock are read
+from the catalogue on every response, so totals are never stale. Each line
+reports `status` `ok`, `limited` (more than is left) or `sold_out`, and
+`maxQuantity` (at most 10, and never more than the stock). Only `ok` lines count
+towards `summary.subtotal`; `summary.canCheckout` is `false` until every line is
+`ok`. Games that left the catalogue are dropped and listed once in `removed`.
+Writes are guarded by a revision number, so two tabs changing the cart at the
+same time cannot lose each other's change.
+
 ### Authentication
 
 | Method   | Path                                 | Auth   | Description                                                 |

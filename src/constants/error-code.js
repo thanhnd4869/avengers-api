@@ -23,6 +23,10 @@ export const ERROR_CODE = Object.freeze({
   // Removing this would leave the account with no way to sign in.
   LAST_SIGN_IN_METHOD: 'LAST_SIGN_IN_METHOD',
   NOT_FOUND: 'NOT_FOUND',
+  // The variant exists but has no keys left to sell.
+  OUT_OF_STOCK: 'OUT_OF_STOCK',
+  // More than a cart line or a cart may hold.
+  CART_LIMIT: 'CART_LIMIT',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',

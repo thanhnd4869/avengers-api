@@ -7,6 +7,7 @@ import {
   disconnectRedis,
 } from '#config/redis.js'
 import { createBannerController } from '#controllers/banner.controller.js'
+import { createCartController } from '#controllers/cart.controller.js'
 import { createAdminContactMessageController } from '#controllers/admin-contact-message.controller.js'
 import { createAuthController } from '#controllers/auth.controller.js'
 import { createContactMessageController } from '#controllers/contact-message.controller.js'
@@ -22,6 +23,7 @@ import { createSocialLinkController } from '#controllers/social-link.controller.
 import { createAuthMiddlewares } from '#middlewares/auth.middleware.js'
 import { createAuthRateLimits } from '#middlewares/infrastructure.middleware.js'
 import * as bannerRepository from '#repositories/banner.repository.js'
+import * as cartRepository from '#repositories/cart.repository.js'
 import * as contactMessageRepository from '#repositories/contact-message.repository.js'
 import {
   createRedisPing,
@@ -43,6 +45,7 @@ import { createRouter } from '#routes/index.js'
 import { createAdminContactMessageService } from '#services/admin-contact-message.service.js'
 import { createAuthService } from '#services/auth.service.js'
 import { createBannerService } from '#services/banner.service.js'
+import { createCartService } from '#services/cart.service.js'
 import { createContactMessageService } from '#services/contact-message.service.js'
 import { createHealthService } from '#services/health.service.js'
 import { createHomeService } from '#services/home.service.js'
@@ -120,6 +123,9 @@ const platformController = createPlatformController({
 const productController = createProductController({
   productService: createProductService({ productRepository }),
 })
+const cartController = createCartController({
+  cartService: createCartService({ cartRepository }),
+})
 const postController = createPostController({
   postService: createPostService({ postRepository }),
 })
@@ -143,6 +149,7 @@ const authService = createAuthService({
   sessionRepository,
   userTokenRepository,
   userIdentityRepository,
+  cartRepository,
   accessTokens: createAccessTokenSigner({
     secret: environment.jwtSecret,
     ttlMinutes: environment.accessTokenTtlMinutes,
@@ -198,6 +205,7 @@ const app = createApp({
     bannerController,
     platformController,
     productController,
+    cartController,
     postController,
     postCategoryController,
     mediaController,

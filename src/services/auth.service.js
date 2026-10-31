@@ -93,6 +93,7 @@ export function createAuthService({
   sessionRepository,
   userTokenRepository,
   userIdentityRepository,
+  cartRepository,
   accessTokens,
   mailer,
   logger,
@@ -745,6 +746,7 @@ export function createAuthService({
       await userTokenRepository.deleteAllUserTokens(user._id, tokenTypes)
       await userTokenRepository.clearEmailCooldowns(user._id, tokenTypes)
       await userIdentityRepository.deleteUserIdentities(user._id)
+      await cartRepository.deleteCart(user._id)
       await userRepository.deleteUserById(user._id)
     },
   }

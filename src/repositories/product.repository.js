@@ -169,6 +169,14 @@ const LISTING_PROJECTION = {
     ratingAverage: 1,
     ratingCount: 1,
     hasVariants: 1,
+    // A game sold as one variant can go straight into the cart from a card.
+    variantId: {
+      $cond: [
+        { $eq: [{ $size: '$variants' }, 1] },
+        { $toString: '$cheapest._id' },
+        null,
+      ],
+    },
     inStock: 1,
     platforms: 1,
   },
