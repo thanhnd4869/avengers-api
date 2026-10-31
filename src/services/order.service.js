@@ -1,6 +1,10 @@
 import { randomInt } from 'node:crypto'
 import { ERROR_CODE } from '#constants/error-code.js'
-import { ORDER_CURRENCY, ORDER_STATUS } from '#constants/order.js'
+import {
+  ORDER_CURRENCY,
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+} from '#constants/order.js'
 import { ConflictError, NotFoundError } from '#errors/app-error.js'
 import {
   parseOrderNumber,
@@ -292,8 +296,18 @@ export function createOrderService({
 
     async getOrder(userId, number) {
       const order = await findOwnOrder(userId, number)
+      const payments = await orderRepository.findOrderPayments(order._id)
 
-      return { data: toPublicOrder(order, { keys: await decryptKeys(order) }) }
+      return {
+        data: {
+          ...toPublicOrder(order, { keys: await decryptKeys(order) }),
+          // Shows a shopper who paid twice, or paid too late, that a refund
+          // is on its way.
+          refundPending: payments.some(
+            (payment) => payment.status === PAYMENT_STATUS.REFUND_REQUIRED,
+          ),
+        },
+      }
     },
 
     async getPendingOrder(userId) {

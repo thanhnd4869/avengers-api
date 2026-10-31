@@ -57,6 +57,14 @@ const orderSchema = new mongoose.Schema(
     idempotencyKey: { type: String, required: true },
     expiresAt: { type: Date, required: true },
     paidAt: { type: Date, default: null },
+    // The payment that paid for the order.
+    paymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment',
+      default: null,
+    },
+    // When the keys email went out, so it is sent once.
+    keysEmailedAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
     expiredAt: { type: Date, default: null },
     // An expired or cancelled order keeps its keys until this moment, then

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
-import { KEY_STATUS, ORDER_STATUS } from '#constants/order.js'
+import { KEY_STATUS, ORDER_STATUS, PAYMENT_STATUS } from '#constants/order.js'
 import { Order } from '#models/order.model.js'
+import { Payment } from '#models/payment.model.js'
 import { ProductKey } from '#models/product-key.model.js'
 import { ProductVariant } from '#models/product-variant.model.js'
 
@@ -232,6 +233,233 @@ export function releaseHeldKeys(orderId) {
 
     return keys.length
   })
+}
+
+/**
+ * Records that `paymentId` paid for its order and hands over the keys, all in
+ * one transaction. Answers what happened, for the payment service to report:
+ *
+ * - `paid`: the order is now paid by this payment and its keys are sold;
+ * - `already_paid_by_this`: this payment had already been applied (VNPay's
+ *   IPN and the shopper's return both confirming the same payment);
+ * - `refund_required`: the money arrived but nothing can be delivered for it,
+ *   either because the order was already paid by another payment or because
+ *   its keys went back on sale and too few are left to hold again. The
+ *   payment is marked for a refund and the order is left as it was.
+ *
+ * Only the order's own status change decides who wins: it is conditional on
+ * the order not being paid yet, so of two confirmations running at once
+ * (two IPNs, IPN and return, two different payments) exactly one commits the
+ * `paid` change and the other finds it already done when MongoDB makes it
+ * retry.
+ */
+export function confirmOrderPayment({ paymentId, paidAt, providerDetails }) {
+  return inTransaction(async (session) => {
+    const payment = await Payment.findById(paymentId, null, { session }).lean()
+
+    if (!payment) throw new Error(`Payment ${paymentId} not found`)
+
+    if (payment.status === PAYMENT_STATUS.SUCCEEDED) {
+      return { outcome: 'already_paid_by_this', payment }
+    }
+
+    if (payment.status === PAYMENT_STATUS.REFUND_REQUIRED) {
+      return { outcome: 'refund_required', payment }
+    }
+
+    const order = await Order.findById(payment.orderId, null, {
+      session,
+    }).lean()
+
+    const refund = async (reason) => {
+      const updated = await Payment.findOneAndUpdate(
+        { _id: paymentId },
+        {
+          $set: {
+            status: PAYMENT_STATUS.REFUND_REQUIRED,
+            refundReason: reason,
+            paidAt,
+            settledAt: new Date(),
+            ...providerDetails,
+          },
+        },
+        { session, returnDocument: 'after', lean: true },
+      )
+
+      return { outcome: 'refund_required', payment: updated, order }
+    }
+
+    if (order.status === ORDER_STATUS.PAID) {
+      return refund('Order was already paid by another payment')
+    }
+
+    // Keys still held for this order (pending, or ended but not yet
+    // released) are sold as they are. Keys already released must be held
+    // again from what is left on sale.
+    const held = await ProductKey.find(
+      { orderId: order._id, status: KEY_STATUS.RESERVED },
+      { _id: 1, variantId: 1 },
+      { session },
+    ).lean()
+    const heldPerVariant = new Map()
+
+    for (const key of held) {
+      const id = String(key.variantId)
+      heldPerVariant.set(id, (heldPerVariant.get(id) ?? 0) + 1)
+    }
+
+    const now = new Date()
+
+    for (const item of order.items) {
+      const missing =
+        item.quantity - (heldPerVariant.get(String(item.variantId)) ?? 0)
+
+      if (missing <= 0) continue
+
+      const counter = await ProductVariant.updateOne(
+        { _id: item.variantId, availableKeys: { $gte: missing } },
+        { $inc: { availableKeys: -missing } },
+        { session },
+      )
+
+      if (counter.modifiedCount !== 1) {
+        // Undoes the holds made for earlier lines in this transaction.
+        throw new RefundNeeded('Keys sold out before the payment arrived')
+      }
+
+      const keys = await ProductKey.find(
+        { variantId: item.variantId, status: KEY_STATUS.AVAILABLE },
+        { _id: 1 },
+        { session },
+      )
+        .sort({ _id: 1 })
+        .limit(missing)
+        .lean()
+
+      if (keys.length !== missing) {
+        throw new RefundNeeded('Key counter disagrees with stocked keys')
+      }
+
+      await ProductKey.updateMany(
+        { _id: { $in: keys.map((key) => key._id) } },
+        {
+          $set: {
+            status: KEY_STATUS.RESERVED,
+            orderId: order._id,
+            reservedAt: now,
+          },
+        },
+        { session },
+      )
+    }
+
+    const paid = await Order.findOneAndUpdate(
+      { _id: order._id, status: { $ne: ORDER_STATUS.PAID } },
+      {
+        $set: {
+          status: ORDER_STATUS.PAID,
+          paidAt,
+          paymentId,
+          // An ended order revived by a late payment keeps its keys for good.
+          keysReleaseAfter: null,
+          keysReleasedAt: null,
+        },
+      },
+      { session, returnDocument: 'after', lean: true },
+    )
+
+    if (!paid) return refund('Order was already paid by another payment')
+
+    const sold = await ProductKey.updateMany(
+      { orderId: order._id, status: KEY_STATUS.RESERVED },
+      { $set: { status: KEY_STATUS.SOLD, soldAt: now } },
+      { session },
+    )
+
+    if (sold.modifiedCount !== order.itemCount) {
+      throw new Error(
+        `Order ${order.number} sold ${sold.modifiedCount} keys for ${order.itemCount} items`,
+      )
+    }
+
+    const succeeded = await Payment.findOneAndUpdate(
+      { _id: paymentId },
+      {
+        $set: {
+          status: PAYMENT_STATUS.SUCCEEDED,
+          paidAt,
+          settledAt: now,
+          ...providerDetails,
+        },
+      },
+      { session, returnDocument: 'after', lean: true },
+    )
+
+    return { outcome: 'paid', payment: succeeded, order: paid }
+  }).catch(async (error) => {
+    if (!(error instanceof RefundNeeded)) throw error
+
+    // The transaction was rolled back, so the refund mark is written on its
+    // own. It is conditional on the payment still being pending, so it can
+    // never overwrite a success recorded in the meantime.
+    const payment = await Payment.findOneAndUpdate(
+      { _id: paymentId, status: PAYMENT_STATUS.PENDING },
+      {
+        $set: {
+          status: PAYMENT_STATUS.REFUND_REQUIRED,
+          refundReason: error.message,
+          paidAt,
+          settledAt: new Date(),
+          ...providerDetails,
+        },
+      },
+      { returnDocument: 'after', lean: true },
+    )
+
+    return payment
+      ? { outcome: 'refund_required', payment }
+      : confirmOrderPayment({ paymentId, paidAt, providerDetails })
+  })
+}
+
+class RefundNeeded extends Error {}
+
+export function createPayment(payment) {
+  return Payment.create(payment).then((created) => created.toObject())
+}
+
+export function findPaymentByTxnRef(txnRef) {
+  return Payment.findOne({ txnRef }).lean()
+}
+
+/** Marks a pending payment failed; a settled one is left as it is. */
+export function markPaymentFailed({ paymentId, providerDetails }) {
+  return Payment.findOneAndUpdate(
+    { _id: paymentId, status: PAYMENT_STATUS.PENDING },
+    {
+      $set: {
+        status: PAYMENT_STATUS.FAILED,
+        settledAt: new Date(),
+        ...providerDetails,
+      },
+    },
+    { returnDocument: 'after', lean: true },
+  )
+}
+
+/** The latest payments of an order, newest first. */
+export function findOrderPayments(orderId) {
+  return Payment.find({ orderId }).sort({ createdAt: -1 }).limit(20).lean()
+}
+
+/** Marks the keys email as sent; answers `false` if it already was. */
+export async function markKeysEmailed(orderId) {
+  const result = await Order.updateOne(
+    { _id: orderId, keysEmailedAt: null },
+    { $set: { keysEmailedAt: new Date() } },
+  )
+
+  return result.modifiedCount === 1
 }
 
 export function findOrderById(orderId) {

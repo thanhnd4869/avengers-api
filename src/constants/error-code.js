@@ -36,6 +36,12 @@ export const ERROR_CODE = Object.freeze({
   PENDING_ORDER_EXISTS: 'PENDING_ORDER_EXISTS',
   // The order is no longer pending, so it cannot be cancelled or paid.
   ORDER_NOT_PENDING: 'ORDER_NOT_PENDING',
+  // Too little of the hold is left to finish paying at the gateway.
+  PAYMENT_WINDOW_CLOSED: 'PAYMENT_WINDOW_CLOSED',
+  // No payment gateway is configured.
+  PAYMENT_UNAVAILABLE: 'PAYMENT_UNAVAILABLE',
+  // The gateway's reply could not be trusted (bad signature, wrong order).
+  INVALID_PAYMENT_RESULT: 'INVALID_PAYMENT_RESULT',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',

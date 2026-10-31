@@ -1,8 +1,10 @@
 import { Router } from 'express'
 
-export function createOrderRouter({ orderController, auth }) {
+export function createOrderRouter({ orderController, auth, paymentRouter }) {
   const router = Router()
 
+  // Has its own authentication, before the router-wide one below.
+  router.use('/:number/payments', paymentRouter)
   router.use(auth.authenticate)
   router.post('/', orderController.createOrder)
   router.get('/', orderController.listOrders)

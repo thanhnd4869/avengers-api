@@ -15,6 +15,7 @@ import { createHealthController } from '#controllers/health.controller.js'
 import { createHomeController } from '#controllers/home.controller.js'
 import { createMediaController } from '#controllers/media.controller.js'
 import { createOrderController } from '#controllers/order.controller.js'
+import { createPaymentController } from '#controllers/payment.controller.js'
 import { createOAuthController } from '#controllers/oauth.controller.js'
 import { createPlatformController } from '#controllers/platform.controller.js'
 import { createPostCategoryController } from '#controllers/post-category.controller.js'
@@ -55,6 +56,7 @@ import { createMediaService } from '#services/media.service.js'
 import { createOAuthService } from '#services/oauth.service.js'
 import { startOrderSweeper } from '#services/order-sweeper.js'
 import { createOrderService } from '#services/order.service.js'
+import { createPaymentService } from '#services/payment.service.js'
 import { createPlatformService } from '#services/platform.service.js'
 import { createPostCategoryService } from '#services/post-category.service.js'
 import { createPostService } from '#services/post.service.js'
@@ -71,6 +73,7 @@ import {
   codeChallengeFor,
   createOAuthProviders,
 } from '#utils/oauth-providers.js'
+import { createVnpayClient } from '#utils/vnpay.js'
 import { createApp } from './app.js'
 import {
   describeListenError,
@@ -131,18 +134,40 @@ const platformController = createPlatformController({
 const productController = createProductController({
   productService: createProductService({ productRepository }),
 })
+const mailer = createMailer({
+  smtp: environment.smtp,
+  mailFrom: environment.mailFrom,
+  logger,
+})
+const keyCipher = createKeyCipher(environment.keyEncryptionKey)
 const cartService = createCartService({ cartRepository })
 const cartController = createCartController({ cartService })
 const orderService = createOrderService({
   orderRepository,
   cartRepository,
   cartService,
-  keyCipher: createKeyCipher(environment.keyEncryptionKey),
+  keyCipher,
   holdMinutes: environment.orders.holdMinutes,
   paymentGraceSeconds: environment.orders.paymentGraceSeconds,
   logger,
 })
 const orderController = createOrderController({ orderService })
+const paymentService = createPaymentService({
+  orderRepository,
+  cartService,
+  vnpay: environment.vnpay ? createVnpayClient(environment.vnpay) : null,
+  keyCipher,
+  userRepository,
+  mailer,
+  appUrl: environment.appUrl,
+  apiUrl: environment.oauth.apiUrl,
+  logger,
+})
+const paymentController = createPaymentController({ paymentService })
+
+if (!environment.vnpay) {
+  logger.info('VNPay payment is off: no credentials set')
+}
 const postController = createPostController({
   postService: createPostService({ postRepository }),
 })
@@ -171,11 +196,7 @@ const authService = createAuthService({
     secret: environment.jwtSecret,
     ttlMinutes: environment.accessTokenTtlMinutes,
   }),
-  mailer: createMailer({
-    smtp: environment.smtp,
-    mailFrom: environment.mailFrom,
-    logger,
-  }),
+  mailer,
   logger,
   appUrl: environment.appUrl,
   refreshTokenTtlDays: environment.refreshTokenTtlDays,
@@ -224,6 +245,7 @@ const app = createApp({
     productController,
     cartController,
     orderController,
+    paymentController,
     postController,
     postCategoryController,
     mediaController,

@@ -118,29 +118,31 @@ The API is available at `http://localhost:8000` by default.
 
 ## Environment Variables
 
-| Variable                       | Default                         | Description                                                                |
-| ------------------------------ | ------------------------------- | -------------------------------------------------------------------------- |
-| `MONGODB_URI`                  | required                        | MongoDB Atlas connection string                                            |
-| `MONGODB_DB_NAME`              | `avengers`                      | Database name in the cluster                                               |
-| `REDIS_URL`                    | required                        | Redis Cloud connection string; `rediss://` for TLS, password in the URL    |
-| `REDIS_KEY_PREFIX`             | `avengers:`                     | Prefix of every Redis key, so environments can share one Redis             |
-| `JWT_SECRET`                   | required                        | Access-token signing key, at least 32 bytes                                |
-| `NODE_ENV`                     | `development`                   | Either `development` or `production`                                       |
-| `HOST`                         | `localhost`                     | Hostname used by the HTTP server                                           |
-| `PORT`                         | `8000`                          | Port used by the HTTP server                                               |
-| `LOG_LEVEL`                    | `debug` / `info` in prod        | Pino log level                                                             |
-| `CORS_ORIGINS`                 | empty                           | Comma-separated allowed origins; empty allows **no** cross-origin requests |
-| `ACCESS_TOKEN_TTL_MINUTES`     | `15`                            | Lifetime of an access token                                                |
-| `REFRESH_TOKEN_TTL_DAYS`       | `30`                            | Lifetime of a session (refresh token)                                      |
-| `APP_URL`                      | `http://localhost:3000`         | Frontend URL used to build the links in emails                             |
-| `SMTP_HOST`                    | empty; required in production   | SMTP server; when empty, emails are only logged                            |
-| `SMTP_PORT`                    | `587`                           | `465` uses TLS directly, other ports STARTTLS                              |
-| `SMTP_USER`, `SMTP_PASS`       | empty                           | SMTP credentials                                                           |
-| `MAIL_FROM`                    | `Avengers <no-reply@localhost>` | Sender of outgoing emails                                                  |
-| `KEY_ENCRYPTION_KEY`           | required                        | 32 random bytes in base64; encrypts game keys at rest                      |
-| `ORDER_HOLD_MINUTES`           | `10`                            | How long checkout holds keys while the shopper pays                        |
-| `ORDER_PAYMENT_GRACE_SECONDS`  | `300`                           | Extra time an expired order keeps its keys for a late payment              |
-| `ORDER_SWEEP_INTERVAL_SECONDS` | `30`                            | How often expired orders are closed and their keys put back on sale        |
+| Variable                              | Default                         | Description                                                                 |
+| ------------------------------------- | ------------------------------- | --------------------------------------------------------------------------- |
+| `MONGODB_URI`                         | required                        | MongoDB Atlas connection string                                             |
+| `MONGODB_DB_NAME`                     | `avengers`                      | Database name in the cluster                                                |
+| `REDIS_URL`                           | required                        | Redis Cloud connection string; `rediss://` for TLS, password in the URL     |
+| `REDIS_KEY_PREFIX`                    | `avengers:`                     | Prefix of every Redis key, so environments can share one Redis              |
+| `JWT_SECRET`                          | required                        | Access-token signing key, at least 32 bytes                                 |
+| `NODE_ENV`                            | `development`                   | Either `development` or `production`                                        |
+| `HOST`                                | `localhost`                     | Hostname used by the HTTP server                                            |
+| `PORT`                                | `8000`                          | Port used by the HTTP server                                                |
+| `LOG_LEVEL`                           | `debug` / `info` in prod        | Pino log level                                                              |
+| `CORS_ORIGINS`                        | empty                           | Comma-separated allowed origins; empty allows **no** cross-origin requests  |
+| `ACCESS_TOKEN_TTL_MINUTES`            | `15`                            | Lifetime of an access token                                                 |
+| `REFRESH_TOKEN_TTL_DAYS`              | `30`                            | Lifetime of a session (refresh token)                                       |
+| `APP_URL`                             | `http://localhost:3000`         | Frontend URL used to build the links in emails                              |
+| `SMTP_HOST`                           | empty; required in production   | SMTP server; when empty, emails are only logged                             |
+| `SMTP_PORT`                           | `587`                           | `465` uses TLS directly, other ports STARTTLS                               |
+| `SMTP_USER`, `SMTP_PASS`              | empty                           | SMTP credentials                                                            |
+| `MAIL_FROM`                           | `Avengers <no-reply@localhost>` | Sender of outgoing emails                                                   |
+| `KEY_ENCRYPTION_KEY`                  | required                        | 32 random bytes in base64; encrypts game keys at rest                       |
+| `ORDER_HOLD_MINUTES`                  | `10`                            | How long checkout holds keys while the shopper pays                         |
+| `ORDER_PAYMENT_GRACE_SECONDS`         | `300`                           | Extra time an expired order keeps its keys for a late payment               |
+| `ORDER_SWEEP_INTERVAL_SECONDS`        | `30`                            | How often expired orders are closed and their keys put back on sale         |
+| `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | empty                           | VNPay terminal code and secret; payment is offered only when both are set   |
+| `VNPAY_PAY_URL`, `VNPAY_API_URL`      | VNPay sandbox                   | Payment page and transaction API; set to VNPay's production URLs to go live |
 
 `MONGODB_URI`, `REDIS_URL`, `JWT_SECRET` and `KEY_ENCRYPTION_KEY` are required.
 Generate a secret with
@@ -239,6 +241,37 @@ Concurrency is handled by the database, not by timing:
 - cancelling, expiring and releasing keys are conditional writes, so they can
   race each other, and several API instances can sweep at once, without
   releasing a key twice.
+
+### Payments (VNPay)
+
+| Method | Path                                           | Auth      | Description                                                      |
+| ------ | ---------------------------------------------- | --------- | ---------------------------------------------------------------- |
+| `GET`  | `/api/v1/payments/methods`                     | –         | `["vnpay"]` when VNPay is configured, otherwise `[]`             |
+| `POST` | `/api/v1/orders/:number/payments/vnpay`        | token     | Starts a payment; answers `{ url }` to send the shopper to       |
+| `POST` | `/api/v1/orders/:number/payments/vnpay/return` | token     | `{ params }` from VNPay's redirect; answers the payment's status |
+| `GET`  | `/api/v1/payments/vnpay/ipn`                   | signature | VNPay's server-to-server result; answers `{ RspCode, Message }`  |
+
+Each click on "Pay" is a payment record with its own `txnRef`, and VNPay's
+expiry for it is the order's hold, so VNPay refuses payment once the keys are no
+longer held. The result is taken only from VNPay: the IPN, or `querydr` when the
+shopper returns before the IPN arrived. Parameters on the return URL are
+verified but never trusted for the result.
+
+Confirming a payment is one transaction: the order becomes `paid` only if it is
+not paid yet, its reserved keys become `sold`, and the payment `succeeded`. So
+duplicate IPNs, an IPN and a return at once, or two payments for one order all
+end with exactly one paid order. Money that cannot be used is recorded as
+`refund_required` (refunded by hand):
+
+- a second successful payment for an order that is already paid;
+- a payment that arrives after the order's keys went back on sale, when too few
+  are left to hold again. (If enough are left, they are held again and the order
+  is paid as usual.)
+
+After a payment the bought games leave the cart and, if the account has an email
+address, the keys are emailed once. VNPay must be able to reach
+`$API_URL/api/v1/payments/vnpay/ipn` over HTTPS; on a laptop, `querydr` confirms
+payments instead.
 
 Keys are stored encrypted with AES-256-GCM under `KEY_ENCRYPTION_KEY`, with an
 HMAC fingerprint that stops the same code being stocked twice. In development,

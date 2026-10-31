@@ -43,6 +43,22 @@ export function createRequestLoggerMiddleware({ logger }) {
 
       return id
     },
+    serializers: {
+      // Payment callbacks carry the gateway's signature in the query string;
+      // logs keep which payment it was, not its signature.
+      req(request) {
+        if (typeof request.url === 'string' && request.url.includes('vnp_')) {
+          const [path, query = ''] = request.url.split('?')
+          const params = new URLSearchParams(query)
+
+          params.delete('vnp_SecureHash')
+          request.url = `${path}?${params}`
+          request.query = Object.fromEntries(params)
+        }
+
+        return request
+      },
+    },
   })
 }
 
@@ -106,5 +122,7 @@ export function createAuthRateLimits({ isProduction, createStore }) {
     login: limiter('login', 15 * MINUTE, 10 * scale),
     register: limiter('register', 60 * MINUTE, 5 * scale),
     email: limiter('email', 60 * MINUTE, 5 * scale),
+    // Each attempt opens a transaction at the gateway.
+    payment: limiter('payment', 15 * MINUTE, 10 * scale),
   }
 }

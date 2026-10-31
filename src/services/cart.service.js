@@ -252,6 +252,15 @@ export function createCartService({ cartRepository }) {
       return { data }
     },
 
+    /** Drops the lines of games just bought, leaving the rest of the cart. */
+    async removeVariants(userId, variantIds) {
+      const bought = new Set(variantIds.map(String))
+
+      await updateCart(userId, async (items) =>
+        items.filter((item) => !bought.has(String(item.variantId))),
+      )
+    },
+
     async clearCart(userId) {
       return { data: await updateCart(userId, async () => []) }
     },

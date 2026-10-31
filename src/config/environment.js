@@ -105,6 +105,32 @@ function readKeyEncryptionKey(source) {
   return key
 }
 
+/**
+ * VNPay is offered only when the terminal code and secret are both set, as
+ * with Google and Facebook sign-in. The URLs default to the sandbox.
+ */
+function readVnpay(source) {
+  const tmnCode = readString(source, 'VNPAY_TMN_CODE', '')
+  const hashSecret = readString(source, 'VNPAY_HASH_SECRET', '')
+
+  if (!tmnCode || !hashSecret) return null
+
+  return Object.freeze({
+    tmnCode,
+    hashSecret,
+    payUrl: readUrl(
+      source,
+      'VNPAY_PAY_URL',
+      'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+    ),
+    apiUrl: readUrl(
+      source,
+      'VNPAY_API_URL',
+      'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction',
+    ),
+  })
+}
+
 function readPositiveInteger(source, key, fallback) {
   const value = Number(readString(source, key, String(fallback)))
 
@@ -214,6 +240,7 @@ export function getEnvironment(source = process.env) {
     smtp: readSmtp(source, isProduction),
     mailFrom: readString(source, 'MAIL_FROM', 'Avengers <no-reply@localhost>'),
     keyEncryptionKey: readKeyEncryptionKey(source),
+    vnpay: readVnpay(source),
     orders: Object.freeze({
       // How long keys are held while the shopper pays.
       holdMinutes: readPositiveInteger(source, 'ORDER_HOLD_MINUTES', 10),

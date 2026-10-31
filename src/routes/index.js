@@ -4,6 +4,10 @@ import { createAuthRouter } from './auth.routes.js'
 import { createBannerRouter } from './banner.routes.js'
 import { createCartRouter } from './cart.routes.js'
 import { createOrderRouter } from './order.routes.js'
+import {
+  createOrderPaymentRouter,
+  createPaymentRouter,
+} from './payment.routes.js'
 import { createContactMessageRouter } from './contact-message.routes.js'
 import { createHomeRouter } from './home.routes.js'
 import { createMediaRouter } from './media.routes.js'
@@ -23,6 +27,7 @@ export function createRouter({
   productController,
   cartController,
   orderController,
+  paymentController,
   postController,
   postCategoryController,
   mediaController,
@@ -58,7 +63,19 @@ export function createRouter({
     createProductCategoryRouter({ productController }),
   )
   router.use('/cart', createCartRouter({ cartController, auth }))
-  router.use('/orders', createOrderRouter({ orderController, auth }))
+  router.use(
+    '/orders',
+    createOrderRouter({
+      orderController,
+      auth,
+      paymentRouter: createOrderPaymentRouter({
+        paymentController,
+        auth,
+        rateLimit: authRateLimits.payment,
+      }),
+    }),
+  )
+  router.use('/payments', createPaymentRouter({ paymentController }))
   router.use('/posts', createPostRouter({ postController }))
   router.use(
     '/post-categories',
