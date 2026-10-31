@@ -21,6 +21,8 @@ import { Platform } from '#models/platform.model.js'
 import { Post } from '#models/post.model.js'
 import { PostCategory } from '#models/post-category.model.js'
 import { Product } from '#models/product.model.js'
+import { ProductCategory } from '#models/product-category.model.js'
+import { ProductReview } from '#models/product-review.model.js'
 import { ProductVariant } from '#models/product-variant.model.js'
 import { SocialLink } from '#models/social-link.model.js'
 import { UserIdentity } from '#models/user-identity.model.js'
@@ -32,8 +34,10 @@ import { User } from '#models/user.model.js'
 // in Redis, which seeding leaves alone.
 const MODELS = [
   Platform,
+  ProductCategory,
   Product,
   ProductVariant,
+  ProductReview,
   PostCategory,
   Post,
   Banner,
@@ -62,10 +66,31 @@ async function seed(data) {
   const platforms = await Platform.insertMany(data.platforms)
   const platformIds = idsBySlug(platforms)
 
+  const productCategories = await ProductCategory.insertMany(
+    data.productCategories,
+  )
+  const productCategoryIds = idsBySlug(productCategories)
+
   const products = await Product.insertMany(
-    data.products.map(({ variants: _variants, ...product }) => product),
+    data.products.map(
+      ({ variants: _variants, reviews: _reviews, categories, ...product }) => ({
+        ...product,
+        categoryIds: categories.map((slug) =>
+          lookup(productCategoryIds, slug, 'product category'),
+        ),
+      }),
+    ),
   )
   const productIds = idsBySlug(products)
+
+  await ProductReview.insertMany(
+    data.products.flatMap((product) =>
+      product.reviews.map((review) => ({
+        ...review,
+        productId: lookup(productIds, product.slug, 'product'),
+      })),
+    ),
+  )
 
   await ProductVariant.insertMany(
     data.products.flatMap((product) =>

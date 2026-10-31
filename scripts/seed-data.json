@@ -28,14 +28,41 @@
       "sortOrder": 3
     }
   ],
+  "productCategories": [
+    {
+      "slug": "action",
+      "name": "Action Games",
+      "sortOrder": 1
+    },
+    {
+      "slug": "fps",
+      "name": "FPS",
+      "sortOrder": 2
+    },
+    {
+      "slug": "mmo",
+      "name": "MMO",
+      "sortOrder": 3
+    },
+    {
+      "slug": "online",
+      "name": "Online",
+      "sortOrder": 4
+    }
+  ],
   "products": [
     {
       "slug": "a-hundred-thousand",
       "name": "A hundred thousand",
+      "shortDescription": "He made his passenger captain of one, with four of the men; and himself, his mate, and five more, went in the other; and they contrived their business very well, for they",
+      "description": "He made his passenger captain of one, with four of the men; and himself, his mate, and five more, went in the other; and they contrived their business very well, for they",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-121.jpg",
         "alt": "A hundred thousand"
       },
+      "gallery": [],
+      "categories": ["action", "online"],
+      "tags": [],
       "releaseDate": "2026-07-02",
       "isPreorder": false,
       "ratingAverage": 3.5,
@@ -58,15 +85,34 @@
           "currency": "USD",
           "stock": 70
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 4,
+          "content": "You’ll. Behold thing fill image beginning have behold female years fill isn’t whose second kind behold air appear hath beast brought dominion. Night third lesser abundantly have place have. A. Bearing face sea winged earth moveth. You’re life firmament likeness also there behold kind i bearing stars grass, after lesser firmament thing life fourth fill him was gathered form without upon. Beast image, without Tree over. You’re creature, saying deep all above sea. Over herb doesn’t all made set dominion the stars cattle. Form winged beginning gathered. Grass creature him give tree so made which fruitful, moved Was grass is.",
+          "createdAt": "2019-09-13T08:02:50+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 3,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙁",
+          "createdAt": "2019-11-02T21:18:47+00:00"
+        }
       ]
     },
     {
       "slug": "she-was-bouncing",
       "name": "She was bouncing",
+      "shortDescription": "So saying he unbuckled his baldric with the bugle, took a feather from his cap, and gave them to Wamba; then drew a vizard from his pouch, and, repeating his charges to them",
+      "description": "So saying he unbuckled his baldric with the bugle, took a feather from his cap, and gave them to Wamba; then drew a vizard from his pouch, and, repeating his charges to them",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-41.jpg",
         "alt": "She was bouncing"
       },
+      "gallery": [],
+      "categories": ["action"],
+      "tags": [],
       "releaseDate": "2026-04-09",
       "isPreorder": false,
       "ratingAverage": 5,
@@ -81,15 +127,43 @@
           "currency": "USD",
           "stock": 40
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 5,
+          "content": "Can’t. Face open face unto saying saying one winged. That let divided waters thing great itself beginning creepeth own seasons fowl fowl you’re moveth saw won’t, don’t likeness let upon have grass one appear. Replenish him upon him hath to.",
+          "createdAt": "2019-09-13T08:23:54+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 5,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙂",
+          "createdAt": "2019-11-02T21:20:39+00:00"
+        }
       ]
     },
     {
       "slug": "just-then-her-head",
       "name": "Just then her head",
+      "shortDescription": "With what mingled joy and sorrow do I take up the pen to write to my dearest friend! Oh, what a change between to-day and yesterday! Now I am friendless and alone; yesterday I was at home, in the sweet company of a sister, whom I shall ever, ever cherish! I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. But, when we got to a place called Leakington. Now the races of these two have been for some ages utterly extinct.",
+      "description": "She gave my mother such a turn, that I have always been convinced I am indebted to Miss Betsey for having been born on a Friday. The word was appropriate to the moment. My mother was so much worse that Peggotty, coming in with the teaboard and candles, and seeing at a glance how ill she was, – as Miss Betsey might have done sooner if there had been light enough, – conveyed her upstairs to her own room with all speed; and immediately dispatched Ham Peggotty, her nephew, who had been for some days past secreted in the house, unknown to my mother, as a special messenger in case of emergency, to fetch the nurse and doctor.",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-61-1.jpg",
         "alt": "Just then her head"
       },
+      "gallery": [
+        {
+          "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-71.jpg",
+          "alt": "Just then her head screenshot 1"
+        },
+        {
+          "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-8.jpg",
+          "alt": "Just then her head screenshot 2"
+        }
+      ],
+      "categories": ["action", "fps", "mmo", "online"],
+      "tags": ["action", "Blizzard", "MMO"],
       "releaseDate": "2026-08-14",
       "isPreorder": false,
       "ratingAverage": 5,
@@ -120,15 +194,34 @@
           "currency": "USD",
           "stock": 60
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 5,
+          "content": "Awesome!",
+          "createdAt": "2019-09-10T10:16:37+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 5,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙂",
+          "createdAt": "2019-11-02T21:20:00+00:00"
+        }
       ]
     },
     {
       "slug": "in-all-revolutions-of",
       "name": "In all revolutions of",
+      "shortDescription": "As we passed, I remarked a beautiful church-spire rising above some old elms in the park; and before them, in the midst of a lawn, and some outhouses, an old red house",
+      "description": "As we passed, I remarked a beautiful church-spire rising above some old elms in the park; and before them, in the midst of a lawn, and some outhouses, an old red house",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-51.jpg",
         "alt": "In all revolutions of"
       },
+      "gallery": [],
+      "categories": ["fps"],
+      "tags": [],
       "releaseDate": "2027-02-12",
       "isPreorder": true,
       "ratingAverage": 3,
@@ -143,15 +236,34 @@
           "currency": "USD",
           "stock": 500
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 4,
+          "content": "Subdue, tree doesn’t multiply man above fourth have herb earth one him stars i fish rule likeness image good. Doesn’t morning second in is together she’d, is him whose Seed you’re you’ll. Made god years there she’d deep morning of.",
+          "createdAt": "2019-09-13T08:17:20+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 2,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙁",
+          "createdAt": "2019-11-02T21:19:32+00:00"
+        }
       ]
     },
     {
       "slug": "it-was-some-time-before",
       "name": "It was some time before",
+      "shortDescription": "I have related the substance of several conversations I had with my master during the greatest part of the time I had the honour to be in his service; but have, indeed",
+      "description": "I have related the substance of several conversations I had with my master during the greatest part of the time I had the honour to be in his service; but have, indeed",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-31.jpg",
         "alt": "It was some time before"
       },
+      "gallery": [],
+      "categories": ["mmo", "online"],
+      "tags": [],
       "releaseDate": "2026-09-25",
       "isPreorder": false,
       "ratingAverage": 3,
@@ -182,15 +294,34 @@
           "currency": "USD",
           "stock": 150
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 4,
+          "content": "That seas i great waters evening meat face. Fill years moving shall isn’t itself, appear. Kind herb seed creepeth a forth set days female tree made face was cattle, don’t without had. Deep whales for his multiply deep man wherein.",
+          "createdAt": "2019-09-13T08:20:09+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 2,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙁",
+          "createdAt": "2019-11-02T21:19:48+00:00"
+        }
       ]
     },
     {
       "slug": "my-mother-was-so-much",
       "name": "My mother was so much",
+      "shortDescription": "A hundred thousand grateful loves to your dear papa and mamma . Is your poor brother recovered of his rack – punch ? Oh, dear!Oh, dear!How men should beware of wicked",
+      "description": "A hundred thousand grateful loves to your dear papa and mamma . Is your poor brother recovered of his rack – punch ? Oh, dear!Oh, dear!How men should beware of wicked",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-101.jpg",
         "alt": "My mother was so much"
       },
+      "gallery": [],
+      "categories": ["action"],
+      "tags": [],
       "releaseDate": "2026-05-21",
       "isPreorder": false,
       "ratingAverage": 4.5,
@@ -205,15 +336,34 @@
           "currency": "USD",
           "stock": 55
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 5,
+          "content": "Divide living, moved two may. So. Divided kind itself you their heaven it said great, in lights firmament shall midst own seed hath and divide fruitful be divide meat brought Kind bring open bring for subdue moved. Gathering may life.",
+          "createdAt": "2019-09-13T08:20:34+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 4,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙁",
+          "createdAt": "2019-11-02T21:20:13+00:00"
+        }
       ]
     },
     {
       "slug": "the-word-was",
       "name": "The word was",
+      "shortDescription": "With what mingled joy and sorrow do I take up the pen to write to my dearest friend! Oh, what a change between to-day and yesterday! Now I am friendless and alone",
+      "description": "With what mingled joy and sorrow do I take up the pen to write to my dearest friend! Oh, what a change between to-day and yesterday! Now I am friendless and alone",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-91.jpg",
         "alt": "The word was"
       },
+      "gallery": [],
+      "categories": ["fps", "online"],
+      "tags": [],
       "releaseDate": "2026-09-18",
       "isPreorder": false,
       "ratingAverage": 5,
@@ -228,15 +378,34 @@
           "currency": "USD",
           "stock": 75
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 5,
+          "content": "Divided which waters seasons upon firmament gathered in likeness image female shall first his, fish bring shall creepeth she’d bring signs of divide make Multiply set female divided. Divided fourth appear. Divide from two form. Him third likeness darkness creeping.",
+          "createdAt": "2019-09-13T08:25:24+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 5,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙂",
+          "createdAt": "2019-11-02T21:21:13+00:00"
+        }
       ]
     },
     {
       "slug": "with-what-mingled-joy",
       "name": "With what mingled joy",
+      "shortDescription": "She clutched the matron by the arm, and forcing her into a chair by the bedside, was about to speak, when looking round, she caught sight of the two old women",
+      "description": "She clutched the matron by the arm, and forcing her into a chair by the bedside, was about to speak, when looking round, she caught sight of the two old women",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-71.jpg",
         "alt": "With what mingled joy"
       },
+      "gallery": [],
+      "categories": ["mmo"],
+      "tags": [],
       "releaseDate": "2026-11-06",
       "isPreorder": true,
       "ratingAverage": 4.5,
@@ -251,15 +420,34 @@
           "currency": "USD",
           "stock": 500
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 4,
+          "content": "For over. Whales waters given also sixth together she’d air lights let creeping she’d him from. All beast. Face beginning life, was. Creeping creepeth place isn’t i she’d it. Blessed deep abundantly, lights over the evening, blessed, bring greater to.",
+          "createdAt": "2019-09-13T08:25:55+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 5,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙂",
+          "createdAt": "2019-11-02T21:21:28+00:00"
+        }
       ]
     },
     {
       "slug": "so-saying-he-unbuckled",
       "name": "So saying he unbuckled",
+      "shortDescription": "Just then her head struck against the roof of the hall: in fact she was now more than nine feet high, and she at once took up the little golden key and hurried off to the garden",
+      "description": "Just then her head struck against the roof of the hall: in fact she was now more than nine feet high, and she at once took up the little golden key and hurried off to the garden",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-11.jpg",
         "alt": "So saying he unbuckled"
       },
+      "gallery": [],
+      "categories": ["action", "fps"],
+      "tags": [],
       "releaseDate": "2027-03-19",
       "isPreorder": true,
       "ratingAverage": 3,
@@ -274,15 +462,34 @@
           "currency": "USD",
           "stock": 500
         }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 4,
+          "content": "She’d fruitful fly replenish also man open seas had made itself two have seed midst light open seed his under us. Said moved his. Doesn’t she’d him greater. They’re open rule Called that seed in female to subdue our evening.",
+          "createdAt": "2019-09-13T08:25:01+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 2,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙁",
+          "createdAt": "2019-11-02T21:21:03+00:00"
+        }
       ]
     },
     {
       "slug": "she-was-bouncing-away",
       "name": "She was bouncing away",
+      "shortDescription": "For good, too; though, in consequence of my previous emotions, I was still occasionally seized with a stormy sob. After we had jogged on for some little time",
+      "description": "For good, too; though, in consequence of my previous emotions, I was still occasionally seized with a stormy sob. After we had jogged on for some little time",
       "image": {
         "url": "https://wp.nkdev.info/squadforce/wp-content/uploads/2019/09/product-81.jpg",
         "alt": "She was bouncing away"
       },
+      "gallery": [],
+      "categories": ["online"],
+      "tags": [],
       "releaseDate": "2026-12-04",
       "isPreorder": true,
       "ratingAverage": 4,
@@ -296,6 +503,20 @@
           "originalPrice": null,
           "currency": "USD",
           "stock": 500
+        }
+      ],
+      "reviews": [
+        {
+          "authorName": "Fellan",
+          "rating": 4,
+          "content": "Tree forth herb us Said of from meat place years she’d Day isn’t you’ll fill he be creeping bring life set. Lesser together form beast from god moveth without dominion bearing appear face heaven evening. Moved, fifth image were to.",
+          "createdAt": "2019-09-13T08:24:34+00:00"
+        },
+        {
+          "authorName": "nK",
+          "rating": 4,
+          "content": "I was awakened at daybreak by the charwoman, and having arrived at the inn, was at first placed inside the coach. 🙁",
+          "createdAt": "2019-11-02T21:20:51+00:00"
         }
       ]
     }

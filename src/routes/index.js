@@ -8,7 +8,10 @@ import { createMediaRouter } from './media.routes.js'
 import { createPlatformRouter } from './platform.routes.js'
 import { createPostCategoryRouter } from './post-category.routes.js'
 import { createPostRouter } from './post.routes.js'
-import { createProductRouter } from './product.routes.js'
+import {
+  createProductCategoryRouter,
+  createProductRouter,
+} from './product.routes.js'
 import { createSocialLinkRouter } from './social-link.routes.js'
 
 export function createRouter({
@@ -46,6 +49,10 @@ export function createRouter({
   router.use('/banners', createBannerRouter({ bannerController }))
   router.use('/platforms', createPlatformRouter({ platformController }))
   router.use('/products', createProductRouter({ productController }))
+  router.use(
+    '/product-categories',
+    createProductCategoryRouter({ productController }),
+  )
   router.use('/posts', createPostRouter({ postController }))
   router.use(
     '/post-categories',

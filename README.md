@@ -164,6 +164,22 @@ checks poll a fixed path and must never be throttled into a false negative.
 | `GET`  | `/health/live`  | Liveness: the process is running               |
 | `GET`  | `/health/ready` | Readiness: dependencies usable; `503` when not |
 
+### Catalogue
+
+| Method | Path                             | Description                                                                           |
+| ------ | -------------------------------- | ------------------------------------------------------------------------------------- |
+| `GET`  | `/api/v1/products`               | `?page&limit&sort&collection&platform&category&q&minPrice&maxPrice`                   |
+| `GET`  | `/api/v1/products/:slug`         | One product with its variants, categories, gallery and descriptions; `404` if none    |
+| `GET`  | `/api/v1/products/:slug/related` | `?limit` (default 4, max 12); products sharing the most categories, best sellers next |
+| `GET`  | `/api/v1/products/:slug/reviews` | `?page&limit`; newest first                                                           |
+| `GET`  | `/api/v1/product-categories`     | Genres such as Action Games or FPS                                                    |
+
+`sort` is one of `-sales` (default), `-rating`, `-releaseDate`, `releaseDate`,
+`-discount`, `price` and `-price`. A product matches `minPrice`/`maxPrice` when
+one of its variants (on `platform`, if given) is priced within the range. The
+listing's `meta.priceRange` holds the cheapest and dearest price among the
+matches before the price filter, for a price slider.
+
 ### Authentication
 
 | Method   | Path                                 | Auth   | Description                                                 |
