@@ -147,11 +147,7 @@ const oauthController = createOAuthController({
   flowTtlSeconds: OAUTH_FLOW_TTL_SECONDS,
 })
 
-if (environment.oauth.mockUrl) {
-  logger.warn(
-    `Sign-in with Google and Facebook uses the mock provider at ${environment.oauth.mockUrl}`,
-  )
-} else if (Object.keys(oauthProviders).length === 0) {
+if (Object.keys(oauthProviders).length === 0) {
   logger.info('Sign-in with Google and Facebook is off: no credentials set')
 }
 

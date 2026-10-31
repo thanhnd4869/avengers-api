@@ -99,24 +99,12 @@ function readAppUrl(source) {
 
 /**
  * Sign-in with Google or Facebook is offered only for providers whose id and
- * secret are both set. In development, `OAUTH_MOCK_URL` points every provider
- * at `npm run mock-oauth` instead, so the flow can be tried without real apps;
- * production refuses it.
+ * secret are both set.
  */
-function readOAuth(source, isProduction) {
-  const mockUrl = readString(source, 'OAUTH_MOCK_URL', '')
-
-  if (mockUrl !== '' && isProduction) {
-    throw new RangeError('OAUTH_MOCK_URL must not be set in production')
-  }
-
+function readOAuth(source) {
   const provider = (idKey, secretKey) => {
-    const clientId = readString(source, idKey, mockUrl ? 'mock-client' : '')
-    const clientSecret = readString(
-      source,
-      secretKey,
-      mockUrl ? 'mock-secret' : '',
-    )
+    const clientId = readString(source, idKey, '')
+    const clientSecret = readString(source, secretKey, '')
 
     return clientId && clientSecret
       ? Object.freeze({ clientId, clientSecret })
@@ -126,7 +114,6 @@ function readOAuth(source, isProduction) {
   return Object.freeze({
     // Where the providers send the visitor back: the API's own public origin.
     apiUrl: readUrl(source, 'API_URL', `http://localhost:${readPort(source)}`),
-    mockUrl: mockUrl === '' ? null : readUrl(source, 'OAUTH_MOCK_URL', ''),
     google: provider('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'),
     facebook: provider('FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'),
   })
@@ -186,7 +173,7 @@ export function getEnvironment(source = process.env) {
       30,
     ),
     appUrl: readAppUrl(source),
-    oauth: readOAuth(source, isProduction),
+    oauth: readOAuth(source),
     smtp: readSmtp(source, isProduction),
     mailFrom: readString(source, 'MAIL_FROM', 'Avengers <no-reply@localhost>'),
   })

@@ -187,11 +187,6 @@ An account without a password (`hasPassword: false`) sets one through
 or confirmed with a provider (`intent: reauth`), within the last 10 minutes;
 otherwise the API answers `403` with code `REAUTH_REQUIRED`.
 
-`npm run mock-oauth` starts a stand-in for both providers on port 8090. Set
-`OAUTH_MOCK_URL=http://localhost:8090` to use it without real credentials. A
-database created before email became optional must run
-`npm run migrate:email-index` once.
-
 Account changes that need the current password (changing the password or the
 email, deleting the account) answer `400` with a field error when it is wrong,
 not `401`, because the session itself is still valid. Changing the password
@@ -209,20 +204,20 @@ older rules keep working.
 
 All scripts are compatible with Windows, Ubuntu, and macOS.
 
-| Command                                            | Description                                                                      |
-| -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `npm start`                                        | Starts the application                                                           |
-| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes            |
-| `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data   |
-| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`)  |
-| `npm run migrate:email-index`                      | Makes `users.email` optional (partial unique index); safe to run again           |
-| `npm run mock-oauth`                               | Development stand-in for Google and Facebook on port 8090                        |
-| `npm run lint`                                     | Checks JavaScript files with ESLint                                              |
-| `npm run lint:fix`                                 | Fixes automatically repairable ESLint issues                                     |
-| `npm run format`                                   | Formats supported project files with Prettier                                    |
-| `npm run format:check`                             | Checks formatting without modifying files                                        |
-| `npm run commitlint -- --edit <message-file>`      | Validates a commit message file                                                  |
-| `npm run prepare`                                  | Installs the project-managed Husky hooks; normally runs automatically on install |
+| Command                                            | Description                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `npm start`                                        | Starts the application                                                          |
+| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes           |
+| `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data  |
+| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`) |
+
+| `npm run lint` | Checks JavaScript files with ESLint | | `npm run lint:fix` |
+Fixes automatically repairable ESLint issues | | `npm run format` | Formats
+supported project files with Prettier | | `npm run format:check` | Checks
+formatting without modifying files | |
+`npm run commitlint -- --edit <message-file>` | Validates a commit message file
+| | `npm run prepare` | Installs the project-managed Husky hooks; normally runs
+automatically on install |
 
 ## Error Handling
 

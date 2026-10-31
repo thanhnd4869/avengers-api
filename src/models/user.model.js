@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     // Stored lowercased so the unique index treats `A@x.com` and `a@x.com` as
     // the same account. `null` for a Facebook sign-up that shared no address;
     // the index below only covers real addresses, so many such accounts can
-    // exist. `npm run migrate:email-index` moves an older database onto it.
+    // exist.
     email: {
       type: String,
       default: null,

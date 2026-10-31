@@ -46,30 +46,25 @@ async function requestJson(url, init = {}) {
  * Google, as an OpenID Connect provider with PKCE. Google states whether it
  * verified the address, which decides if the account may be linked by email.
  */
-function createGoogleProvider({
-  clientId,
-  clientSecret,
-  redirectUri,
-  mockUrl,
-}) {
-  const urls = mockUrl
-    ? {
-        auth: `${mockUrl}/google/auth`,
-        token: `${mockUrl}/google/token`,
-        userinfo: `${mockUrl}/google/userinfo`,
-      }
-    : {
-        auth: 'https://accounts.google.com/o/oauth2/v2/auth',
-        token: 'https://oauth2.googleapis.com/token',
-        userinfo: 'https://openidconnect.googleapis.com/v1/userinfo',
-      }
+const GOOGLE_URLS = Object.freeze({
+  auth: 'https://accounts.google.com/o/oauth2/v2/auth',
+  token: 'https://oauth2.googleapis.com/token',
+  userinfo: 'https://openidconnect.googleapis.com/v1/userinfo',
+})
 
+const FACEBOOK_URLS = Object.freeze({
+  auth: `https://www.facebook.com/${FACEBOOK_GRAPH_VERSION}/dialog/oauth`,
+  token: `https://graph.facebook.com/${FACEBOOK_GRAPH_VERSION}/oauth/access_token`,
+  me: `https://graph.facebook.com/${FACEBOOK_GRAPH_VERSION}/me`,
+})
+
+function createGoogleProvider({ clientId, clientSecret, redirectUri }) {
   return {
     name: OAUTH_PROVIDER.GOOGLE,
     usesPkce: true,
 
     authorizationUrl({ state, codeChallenge }) {
-      const url = new URL(urls.auth)
+      const url = new URL(GOOGLE_URLS.auth)
 
       url.search = new URLSearchParams({
         client_id: clientId,
@@ -87,7 +82,7 @@ function createGoogleProvider({
     },
 
     async fetchProfile({ code, codeVerifier }) {
-      const token = await requestJson(urls.token, {
+      const token = await requestJson(GOOGLE_URLS.token, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -100,7 +95,7 @@ function createGoogleProvider({
         }),
       })
 
-      const info = await requestJson(urls.userinfo, {
+      const info = await requestJson(GOOGLE_URLS.userinfo, {
         headers: { Authorization: `Bearer ${token.access_token}` },
       })
 
@@ -124,30 +119,13 @@ function createGoogleProvider({
  * calls carry `appsecret_proof`, so a leaked user token is useless without
  * the app secret.
  */
-function createFacebookProvider({
-  clientId,
-  clientSecret,
-  redirectUri,
-  mockUrl,
-}) {
-  const urls = mockUrl
-    ? {
-        auth: `${mockUrl}/facebook/dialog/oauth`,
-        token: `${mockUrl}/facebook/oauth/access_token`,
-        me: `${mockUrl}/facebook/me`,
-      }
-    : {
-        auth: `https://www.facebook.com/${FACEBOOK_GRAPH_VERSION}/dialog/oauth`,
-        token: `https://graph.facebook.com/${FACEBOOK_GRAPH_VERSION}/oauth/access_token`,
-        me: `https://graph.facebook.com/${FACEBOOK_GRAPH_VERSION}/me`,
-      }
-
+function createFacebookProvider({ clientId, clientSecret, redirectUri }) {
   return {
     name: OAUTH_PROVIDER.FACEBOOK,
     usesPkce: false,
 
     authorizationUrl({ state }) {
-      const url = new URL(urls.auth)
+      const url = new URL(FACEBOOK_URLS.auth)
 
       url.search = new URLSearchParams({
         client_id: clientId,
@@ -161,7 +139,7 @@ function createFacebookProvider({
     },
 
     async fetchProfile({ code }) {
-      const tokenUrl = new URL(urls.token)
+      const tokenUrl = new URL(FACEBOOK_URLS.token)
 
       tokenUrl.search = new URLSearchParams({
         client_id: clientId,
@@ -171,7 +149,7 @@ function createFacebookProvider({
       })
 
       const token = await requestJson(tokenUrl.href)
-      const meUrl = new URL(urls.me)
+      const meUrl = new URL(FACEBOOK_URLS.me)
 
       meUrl.search = new URLSearchParams({
         fields: 'id,name,email',
@@ -201,7 +179,7 @@ function createFacebookProvider({
  * The configured providers, keyed by name. A provider without credentials is
  * left out, so the sign-in page never shows a button that cannot work.
  */
-export function createOAuthProviders({ apiUrl, mockUrl, google, facebook }) {
+export function createOAuthProviders({ apiUrl, google, facebook }) {
   const redirectUriFor = (name) =>
     `${apiUrl}${API_PREFIX}/auth/oauth/${name}/callback`
   const providers = {}
@@ -210,7 +188,6 @@ export function createOAuthProviders({ apiUrl, mockUrl, google, facebook }) {
     providers.google = createGoogleProvider({
       ...google,
       redirectUri: redirectUriFor(OAUTH_PROVIDER.GOOGLE),
-      mockUrl,
     })
   }
 
@@ -218,7 +195,6 @@ export function createOAuthProviders({ apiUrl, mockUrl, google, facebook }) {
     providers.facebook = createFacebookProvider({
       ...facebook,
       redirectUri: redirectUriFor(OAUTH_PROVIDER.FACEBOOK),
-      mockUrl,
     })
   }
 
