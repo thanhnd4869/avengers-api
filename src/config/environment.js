@@ -58,7 +58,11 @@ function readMongodbUri(source) {
 }
 
 function readRedisUrl(source) {
-  const url = readString(source, 'REDIS_URL', 'redis://localhost:6379')
+  const url = readString(source, 'REDIS_URL', '')
+
+  if (url === '') {
+    throw new RangeError('REDIS_URL is required')
+  }
 
   if (!/^rediss?:\/\//.test(url)) {
     throw new RangeError('REDIS_URL must start with redis:// or rediss://')

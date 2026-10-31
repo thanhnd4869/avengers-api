@@ -58,7 +58,7 @@ export async function connectRedis({ redisUrl, logger }) {
     const reason = cause.message || cause.code || 'no response'
 
     throw new Error(
-      `Could not connect to Redis (${reason}). Is it running? In development: docker compose up -d`,
+      `Could not connect to Redis (${reason}). Check REDIS_URL and that the Redis Cloud database is active.`,
       { cause: error },
     )
   }

@@ -46,9 +46,10 @@ directly, so it records every existing migration as already applied.
 
 ## Redis
 
-MongoDB keeps what must last: users, linked Google and Facebook accounts, and
-the catalogue. Redis keeps what is short-lived and read on every request, each
-key expiring on its own:
+The API uses a [Redis Cloud](https://redis.io/cloud/) database, reached through
+`REDIS_URL`. MongoDB keeps what must last: users, linked Google and Facebook
+accounts, and the catalogue. Redis keeps what is short-lived and read on every
+request, each key expiring on its own:
 
 | Key (after `REDIS_KEY_PREFIX`)      | Type   | Holds                                                     |
 | ----------------------------------- | ------ | --------------------------------------------------------- |
@@ -69,13 +70,16 @@ Like MongoDB, Redis must be reachable when the API starts, or it exits with a
 clear error. If the connection drops later, it reconnects on its own; meanwhile
 requests that need a session or a sign-in limit answer `503`, the catalogue
 keeps working, and `/health/ready` reports `redis` as down. Losing Redis data
-signs everyone out, but no account or order is lost; production should run Redis
-with persistence (AOF) on.
+signs everyone out, but no account or order is lost, so the Redis Cloud database
+should have data persistence (append-only file) turned on.
+
+Environments that share one Redis Cloud database must each set their own
+`REDIS_KEY_PREFIX`, such as `avengers-dev:` and `avengers:`.
 
 ## Technology Stack
 
 - MongoDB Atlas for persistent data storage
-- Redis for sessions, emailed links and rate limits
+- Redis Cloud for sessions, emailed links and rate limits
 - Express for the HTTP API
 - React for the separate frontend application
 - Node.js 24 for the backend runtime
@@ -84,7 +88,7 @@ with persistence (AOF) on.
 
 - Node.js `>=24.11.0 <25`
 - npm `>=11`
-- Redis 7 or later; for development, Docker to run it from `docker-compose.yml`
+- A MongoDB Atlas cluster and a Redis Cloud database
 
 ## Getting Started
 
@@ -100,14 +104,9 @@ Create a local environment file from the provided example:
 cp .env.example .env
 ```
 
-On Windows Command Prompt, use `copy .env.example .env` instead. The application
-also runs without a `.env` file by using its default values.
-
-Start Redis in the background (data is kept in a Docker volume):
-
-```sh
-docker compose up -d
-```
+On Windows Command Prompt, use `copy .env.example .env` instead. Then fill in
+the required values: `MONGODB_URI`, `REDIS_URL` (from the Redis Cloud database's
+"Connect" panel) and `JWT_SECRET`.
 
 Start the development server:
 
@@ -123,7 +122,7 @@ The API is available at `http://localhost:8000` by default.
 | -------------------------- | ------------------------------- | -------------------------------------------------------------------------- |
 | `MONGODB_URI`              | required                        | MongoDB Atlas connection string                                            |
 | `MONGODB_DB_NAME`          | `avengers`                      | Database name in the cluster                                               |
-| `REDIS_URL`                | `redis://localhost:6379`        | Redis connection; `rediss://` for TLS, password in the URL                 |
+| `REDIS_URL`                | required                        | Redis Cloud connection string; `rediss://` for TLS, password in the URL    |
 | `REDIS_KEY_PREFIX`         | `avengers:`                     | Prefix of every Redis key, so environments can share one Redis             |
 | `JWT_SECRET`               | required                        | Access-token signing key, at least 32 bytes                                |
 | `NODE_ENV`                 | `development`                   | Either `development` or `production`                                       |
@@ -139,7 +138,7 @@ The API is available at `http://localhost:8000` by default.
 | `SMTP_USER`, `SMTP_PASS`   | empty                           | SMTP credentials                                                           |
 | `MAIL_FROM`                | `Avengers <no-reply@localhost>` | Sender of outgoing emails                                                  |
 
-`MONGODB_URI` and `JWT_SECRET` are required. Generate a secret with
+`MONGODB_URI`, `REDIS_URL` and `JWT_SECRET` are required. Generate a secret with
 `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`.
 `PORT` must be an integer between `1` and `65535`. Blank values are treated as
 missing and fall back to the default.
@@ -624,7 +623,6 @@ avengers-api/
 |-- .prettierignore
 |-- .prettierrc.json
 |-- commitlint.config.js
-|-- docker-compose.yml
 |-- eslint.config.js
 |-- nodemon.json
 |-- package-lock.json
