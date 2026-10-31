@@ -20,6 +20,30 @@ On shutdown the connection is closed through the existing `onShutdown` hook, and
 
 Connection strings contain a password, so they are redacted from logs.
 
+### Migrations
+
+Mongoose creates the indexes a model declares when the API starts, and a new
+field takes its schema `default` on old documents. Anything beyond that, such as
+changing or dropping an index, renaming a field or filling in values for old
+documents, is a migration in `migrations/`, run with
+[migrate-mongo](https://github.com/seppevs/migrate-mongo).
+
+```sh
+npm run migrate -- create rename-post-author   # adds migrations/<timestamp>-rename-post-author.js
+npm run migrate -- up                          # runs what has not run yet
+```
+
+Each file exports `up(db, client)` and `down(db, client)`, using the MongoDB
+driver directly rather than the models, which keep changing after the migration
+is written. Write `up` so it can run again safely, and make `down` refuse,
+rather than lose data, when it cannot undo cleanly.
+
+The ones that ran are recorded in the `migrations` collection. Run
+`npm run migrate -- up` on every deploy before the new version starts; a lock in
+`migrations_lock` keeps two deploys from migrating at once and clears itself
+after 10 minutes if a run is killed. `npm run seed` builds the latest schema
+directly, so it records every existing migration as already applied.
+
 ## Technology Stack
 
 - MongoDB Atlas for persistent data storage
@@ -204,20 +228,22 @@ older rules keep working.
 
 All scripts are compatible with Windows, Ubuntu, and macOS.
 
-| Command                                            | Description                                                                     |
-| -------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `npm start`                                        | Starts the application                                                          |
-| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes           |
-| `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data  |
-| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`) |
-
-| `npm run lint` | Checks JavaScript files with ESLint | | `npm run lint:fix` |
-Fixes automatically repairable ESLint issues | | `npm run format` | Formats
-supported project files with Prettier | | `npm run format:check` | Checks
-formatting without modifying files | |
-`npm run commitlint -- --edit <message-file>` | Validates a commit message file
-| | `npm run prepare` | Installs the project-managed Husky hooks; normally runs
-automatically on install |
+| Command                                            | Description                                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `npm start`                                        | Starts the application                                                           |
+| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes            |
+| `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data   |
+| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`)  |
+| `npm run migrate -- status`                        | Lists every migration and when it ran                                            |
+| `npm run migrate -- up`                            | Runs the pending migrations, oldest first                                        |
+| `npm run migrate -- down`                          | Reverts the last migration that ran                                              |
+| `npm run migrate -- create <description>`          | Adds a new migration file to `migrations/`                                       |
+| `npm run lint`                                     | Checks JavaScript files with ESLint                                              |
+| `npm run lint:fix`                                 | Fixes automatically repairable ESLint issues                                     |
+| `npm run format`                                   | Formats supported project files with Prettier                                    |
+| `npm run format:check`                             | Checks formatting without modifying files                                        |
+| `npm run commitlint -- --edit <message-file>`      | Validates a commit message file                                                  |
+| `npm run prepare`                                  | Installs the project-managed Husky hooks; normally runs automatically on install |
 
 ## Error Handling
 
@@ -495,10 +521,18 @@ avengers-api/
 |-- .husky/
 |   |-- commit-msg
 |   `-- pre-commit
+|-- migrations/
+|   `-- 20261031000000-partial-unique-user-email.js
+|-- scripts/
+|   |-- create-admin.js
+|   |-- migrate.js
+|   |-- seed-data.json
+|   `-- seed.js
 |-- src/
 |   |-- config/
 |   |   |-- database.js
-|   |   `-- environment.js
+|   |   |-- environment.js
+|   |   `-- migrations.js
 |   |-- constants/
 |   |   `-- order-status.js
 |   |-- controllers/

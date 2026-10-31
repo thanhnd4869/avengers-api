@@ -1,14 +1,19 @@
 /**
- * Empties the configured database and refills it from `seed-data.json`.
+ * Empties the configured database and refills it from `seed-data.json`, then
+ * records every existing migration as applied.
  *
  * Run with `npm run seed`. It refuses to run when NODE_ENV is `production`,
  * because every collection in the database is dropped first.
  */
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import mongoose from 'mongoose'
 import { connectDatabase, disconnectDatabase } from '#config/database.js'
 import { getEnvironment, loadEnvironmentFile } from '#config/environment.js'
 import { createLogger } from '#config/logger.js'
+import {
+  MIGRATIONS_CHANGELOG_COLLECTION,
+  MIGRATIONS_DIR,
+} from '#config/migrations.js'
 import { Banner } from '#models/banner.model.js'
 import { ContactMessage } from '#models/contact-message.model.js'
 import { Media } from '#models/media.model.js'
@@ -132,6 +137,29 @@ try {
   }
 
   await seed(data)
+
+  // The models and the seed data already describe the latest schema, so
+  // every migration written so far counts as applied; `npm run migrate -- up`
+  // then only runs the ones added later.
+  const migrations = (await readdir(MIGRATIONS_DIR))
+    .filter((fileName) => fileName.endsWith('.js'))
+    .sort()
+
+  if (migrations.length > 0) {
+    const appliedAt = new Date()
+
+    await mongoose.connection.db
+      .collection(MIGRATIONS_CHANGELOG_COLLECTION)
+      .insertMany(
+        migrations.map((fileName) => ({
+          fileName,
+          appliedAt,
+          migrationBlock: appliedAt.getTime(),
+        })),
+      )
+  }
+
+  logger.info(`Marked ${migrations.length} migrations as applied`)
 
   for (const model of MODELS) {
     logger.info(
