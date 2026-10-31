@@ -16,6 +16,7 @@ import {
 } from '#config/migrations.js'
 import { Banner } from '#models/banner.model.js'
 import { Cart } from '#models/cart.model.js'
+import { Order } from '#models/order.model.js'
 import { ContactMessage } from '#models/contact-message.model.js'
 import { Media } from '#models/media.model.js'
 import { Platform } from '#models/platform.model.js'
@@ -23,11 +24,14 @@ import { Post } from '#models/post.model.js'
 import { PostCategory } from '#models/post-category.model.js'
 import { Product } from '#models/product.model.js'
 import { ProductCategory } from '#models/product-category.model.js'
+import { ProductKey } from '#models/product-key.model.js'
 import { ProductReview } from '#models/product-review.model.js'
 import { ProductVariant } from '#models/product-variant.model.js'
 import { SocialLink } from '#models/social-link.model.js'
 import { UserIdentity } from '#models/user-identity.model.js'
 import { User } from '#models/user.model.js'
+import { createKeyCipher } from '#utils/key-cipher.js'
+import { generateFakeKeys } from './fake-keys.js'
 
 // Every model, including the account ones that get no seed data, so each
 // collection is recreated with its indexes (unique email, provider ids)
@@ -38,6 +42,7 @@ const MODELS = [
   ProductCategory,
   Product,
   ProductVariant,
+  ProductKey,
   ProductReview,
   PostCategory,
   Post,
@@ -48,6 +53,7 @@ const MODELS = [
   User,
   UserIdentity,
   Cart,
+  Order,
 ]
 
 function idsBySlug(documents) {
@@ -94,15 +100,26 @@ async function seed(data) {
     ),
   )
 
-  await ProductVariant.insertMany(
-    data.products.flatMap((product) =>
-      product.variants.map(({ platform, ...variant }) => ({
-        ...variant,
-        productId: lookup(productIds, product.slug, 'product'),
-        platformId: lookup(platformIds, platform, 'platform'),
-      })),
-    ),
-  )
+  // Every variant gets its fake keys, and its counter says how many.
+  for (const product of data.products) {
+    for (const { platform, keys, ...variant } of product.variants) {
+      const [created] = await ProductVariant.insertMany([
+        {
+          ...variant,
+          availableKeys: keys,
+          productId: lookup(productIds, product.slug, 'product'),
+          platformId: lookup(platformIds, platform, 'platform'),
+        },
+      ])
+
+      await ProductKey.insertMany(
+        generateFakeKeys(keys, keyCipher).map((key) => ({
+          ...key,
+          variantId: created._id,
+        })),
+      )
+    }
+  }
 
   const categories = await PostCategory.insertMany(data.postCategories)
   const categoryIds = idsBySlug(categories)
@@ -129,6 +146,7 @@ if (environment.isProduction) {
   process.exit(1)
 }
 
+const keyCipher = createKeyCipher(environment.keyEncryptionKey)
 const data = JSON.parse(
   await readFile(new URL('./seed-data.json', import.meta.url), 'utf8'),
 )

@@ -20,10 +20,15 @@ const productVariantSchema = new mongoose.Schema(
       required: true,
     },
     edition: { type: String, default: 'Standard', trim: true },
+    // Whole dong: VND has no minor unit.
     price: { type: Number, required: true, min: 0 },
     originalPrice: { type: Number, default: null, min: 0 },
-    currency: { type: String, default: 'USD', uppercase: true },
-    stock: { type: Number, default: 0, min: 0 },
+    currency: { type: String, default: 'VND', uppercase: true },
+    // How many of this variant's keys are for sale. Kept in step with
+    // `product_keys` inside every transaction that changes a key's status;
+    // reserving a key decrements it only while it is high enough, which is
+    // what stops two checkouts from selling the same last key.
+    availableKeys: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true, collection: 'product_variants' },
 )

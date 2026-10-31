@@ -86,6 +86,25 @@ function readJwtSecret(source) {
   return secret
 }
 
+const KEY_ENCRYPTION_KEY_BYTES = 32
+
+/**
+ * Seals game keys at rest (see utils/key-cipher.js). Losing it makes every
+ * stocked key unreadable, so it is required rather than defaulted.
+ */
+function readKeyEncryptionKey(source) {
+  const raw = readString(source, 'KEY_ENCRYPTION_KEY', '')
+  const key = Buffer.from(raw, 'base64')
+
+  if (key.length !== KEY_ENCRYPTION_KEY_BYTES) {
+    throw new RangeError(
+      `KEY_ENCRYPTION_KEY is required: ${KEY_ENCRYPTION_KEY_BYTES} random bytes in base64`,
+    )
+  }
+
+  return key
+}
+
 function readPositiveInteger(source, key, fallback) {
   const value = Number(readString(source, key, String(fallback)))
 
@@ -194,5 +213,22 @@ export function getEnvironment(source = process.env) {
     oauth: readOAuth(source),
     smtp: readSmtp(source, isProduction),
     mailFrom: readString(source, 'MAIL_FROM', 'Avengers <no-reply@localhost>'),
+    keyEncryptionKey: readKeyEncryptionKey(source),
+    orders: Object.freeze({
+      // How long keys are held while the shopper pays.
+      holdMinutes: readPositiveInteger(source, 'ORDER_HOLD_MINUTES', 10),
+      // Keys of an expired order stay held this much longer, so a payment
+      // finished at the last second is still confirmed with its keys.
+      paymentGraceSeconds: readPositiveInteger(
+        source,
+        'ORDER_PAYMENT_GRACE_SECONDS',
+        300,
+      ),
+      sweepIntervalSeconds: readPositiveInteger(
+        source,
+        'ORDER_SWEEP_INTERVAL_SECONDS',
+        30,
+      ),
+    }),
   })
 }

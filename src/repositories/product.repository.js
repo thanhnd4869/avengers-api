@@ -97,7 +97,10 @@ const DERIVE_LISTING_FIELDS = [
       hasVariants: { $gt: [{ $size: '$variants' }, 1] },
       inStock: {
         $anyElementTrue: {
-          $map: { input: '$variants', in: { $gt: ['$$this.stock', 0] } },
+          $map: {
+            input: '$variants',
+            in: { $gt: ['$$this.availableKeys', 0] },
+          },
         },
       },
       isDeal: {
@@ -302,7 +305,7 @@ const VARIANT_PROJECTION = {
       currency: '$$this.currency',
       // Shoppers only need to know whether a key can be bought; the exact
       // stock level stays internal.
-      inStock: { $gt: ['$$this.stock', 0] },
+      inStock: { $gt: ['$$this.availableKeys', 0] },
     },
   },
 }

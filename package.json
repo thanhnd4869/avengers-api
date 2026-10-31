@@ -41,6 +41,7 @@
     "dev": "nodemon",
     "seed": "node scripts/seed.js",
     "create-admin": "node scripts/create-admin.js",
+    "keys:fake": "node scripts/stock-fake-keys.js",
     "migrate": "node scripts/migrate.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

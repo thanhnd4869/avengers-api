@@ -17,7 +17,8 @@ const SORTS = [
   '-price',
 ]
 const SEARCH_MAX_LENGTH = 100
-const PRICE_MAX = 100000
+// Prices are whole dong; the dearest game is a few million.
+const PRICE_MAX = 100_000_000
 
 function parseOptionalSearch(value) {
   if (value === undefined) {

@@ -3,6 +3,7 @@ import { createAdminRouter } from './admin.routes.js'
 import { createAuthRouter } from './auth.routes.js'
 import { createBannerRouter } from './banner.routes.js'
 import { createCartRouter } from './cart.routes.js'
+import { createOrderRouter } from './order.routes.js'
 import { createContactMessageRouter } from './contact-message.routes.js'
 import { createHomeRouter } from './home.routes.js'
 import { createMediaRouter } from './media.routes.js'
@@ -21,6 +22,7 @@ export function createRouter({
   platformController,
   productController,
   cartController,
+  orderController,
   postController,
   postCategoryController,
   mediaController,
@@ -56,6 +58,7 @@ export function createRouter({
     createProductCategoryRouter({ productController }),
   )
   router.use('/cart', createCartRouter({ cartController, auth }))
+  router.use('/orders', createOrderRouter({ orderController, auth }))
   router.use('/posts', createPostRouter({ postController }))
   router.use(
     '/post-categories',

@@ -14,6 +14,7 @@ import { createContactMessageController } from '#controllers/contact-message.con
 import { createHealthController } from '#controllers/health.controller.js'
 import { createHomeController } from '#controllers/home.controller.js'
 import { createMediaController } from '#controllers/media.controller.js'
+import { createOrderController } from '#controllers/order.controller.js'
 import { createOAuthController } from '#controllers/oauth.controller.js'
 import { createPlatformController } from '#controllers/platform.controller.js'
 import { createPostCategoryController } from '#controllers/post-category.controller.js'
@@ -30,6 +31,7 @@ import {
   pingDatabase,
 } from '#repositories/health.repository.js'
 import * as mediaRepository from '#repositories/media.repository.js'
+import * as orderRepository from '#repositories/order.repository.js'
 import * as platformRepository from '#repositories/platform.repository.js'
 import * as postCategoryRepository from '#repositories/post-category.repository.js'
 import * as postRepository from '#repositories/post.repository.js'
@@ -51,12 +53,15 @@ import { createHealthService } from '#services/health.service.js'
 import { createHomeService } from '#services/home.service.js'
 import { createMediaService } from '#services/media.service.js'
 import { createOAuthService } from '#services/oauth.service.js'
+import { startOrderSweeper } from '#services/order-sweeper.js'
+import { createOrderService } from '#services/order.service.js'
 import { createPlatformService } from '#services/platform.service.js'
 import { createPostCategoryService } from '#services/post-category.service.js'
 import { createPostService } from '#services/post.service.js'
 import { createProductService } from '#services/product.service.js'
 import { createSocialLinkService } from '#services/social-link.service.js'
 import { createAccessTokenSigner } from '#utils/jwt.js'
+import { createKeyCipher } from '#utils/key-cipher.js'
 import { createMailer } from '#utils/mailer.js'
 import {
   OAUTH_FLOW_TTL_SECONDS,
@@ -78,7 +83,10 @@ loadEnvironmentFile()
 const environment = getEnvironment()
 const logger = createLogger(environment)
 
+let stopOrderSweeper = () => {}
+
 async function closeConnections() {
+  stopOrderSweeper()
   await Promise.allSettled([disconnectDatabase(), disconnectRedis()])
 }
 
@@ -123,9 +131,18 @@ const platformController = createPlatformController({
 const productController = createProductController({
   productService: createProductService({ productRepository }),
 })
-const cartController = createCartController({
-  cartService: createCartService({ cartRepository }),
+const cartService = createCartService({ cartRepository })
+const cartController = createCartController({ cartService })
+const orderService = createOrderService({
+  orderRepository,
+  cartRepository,
+  cartService,
+  keyCipher: createKeyCipher(environment.keyEncryptionKey),
+  holdMinutes: environment.orders.holdMinutes,
+  paymentGraceSeconds: environment.orders.paymentGraceSeconds,
+  logger,
 })
+const orderController = createOrderController({ orderService })
 const postController = createPostController({
   postService: createPostService({ postRepository }),
 })
@@ -206,6 +223,7 @@ const app = createApp({
     platformController,
     productController,
     cartController,
+    orderController,
     postController,
     postCategoryController,
     mediaController,
@@ -240,6 +258,12 @@ try {
   await closeConnections()
   process.exit(1)
 }
+
+stopOrderSweeper = startOrderSweeper({
+  orderService,
+  intervalSeconds: environment.orders.sweepIntervalSeconds,
+  logger,
+})
 
 registerShutdownHandlers({
   server,

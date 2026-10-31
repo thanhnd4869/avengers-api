@@ -78,7 +78,7 @@ export function findPurchasableVariants(variantIds) {
         price: 1,
         originalPrice: 1,
         currency: 1,
-        stock: 1,
+        availableKeys: 1,
         product: 1,
         platform: 1,
       },

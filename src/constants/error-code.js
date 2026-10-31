@@ -27,6 +27,15 @@ export const ERROR_CODE = Object.freeze({
   OUT_OF_STOCK: 'OUT_OF_STOCK',
   // More than a cart line or a cart may hold.
   CART_LIMIT: 'CART_LIMIT',
+  CART_EMPTY: 'CART_EMPTY',
+  // Something in the cart cannot be bought as it is (sold out, too many).
+  CART_NOT_READY: 'CART_NOT_READY',
+  // The total differs from what the shopper saw; the cart must be reviewed.
+  PRICE_CHANGED: 'PRICE_CHANGED',
+  // The shopper already has an unpaid order; pay or cancel it first.
+  PENDING_ORDER_EXISTS: 'PENDING_ORDER_EXISTS',
+  // The order is no longer pending, so it cannot be cancelled or paid.
+  ORDER_NOT_PENDING: 'ORDER_NOT_PENDING',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',

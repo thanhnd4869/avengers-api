@@ -106,7 +106,7 @@ cp .env.example .env
 
 On Windows Command Prompt, use `copy .env.example .env` instead. Then fill in
 the required values: `MONGODB_URI`, `REDIS_URL` (from the Redis Cloud database's
-"Connect" panel) and `JWT_SECRET`.
+"Connect" panel), `JWT_SECRET` and `KEY_ENCRYPTION_KEY`.
 
 Start the development server:
 
@@ -118,30 +118,38 @@ The API is available at `http://localhost:8000` by default.
 
 ## Environment Variables
 
-| Variable                   | Default                         | Description                                                                |
-| -------------------------- | ------------------------------- | -------------------------------------------------------------------------- |
-| `MONGODB_URI`              | required                        | MongoDB Atlas connection string                                            |
-| `MONGODB_DB_NAME`          | `avengers`                      | Database name in the cluster                                               |
-| `REDIS_URL`                | required                        | Redis Cloud connection string; `rediss://` for TLS, password in the URL    |
-| `REDIS_KEY_PREFIX`         | `avengers:`                     | Prefix of every Redis key, so environments can share one Redis             |
-| `JWT_SECRET`               | required                        | Access-token signing key, at least 32 bytes                                |
-| `NODE_ENV`                 | `development`                   | Either `development` or `production`                                       |
-| `HOST`                     | `localhost`                     | Hostname used by the HTTP server                                           |
-| `PORT`                     | `8000`                          | Port used by the HTTP server                                               |
-| `LOG_LEVEL`                | `debug` / `info` in prod        | Pino log level                                                             |
-| `CORS_ORIGINS`             | empty                           | Comma-separated allowed origins; empty allows **no** cross-origin requests |
-| `ACCESS_TOKEN_TTL_MINUTES` | `15`                            | Lifetime of an access token                                                |
-| `REFRESH_TOKEN_TTL_DAYS`   | `30`                            | Lifetime of a session (refresh token)                                      |
-| `APP_URL`                  | `http://localhost:3000`         | Frontend URL used to build the links in emails                             |
-| `SMTP_HOST`                | empty; required in production   | SMTP server; when empty, emails are only logged                            |
-| `SMTP_PORT`                | `587`                           | `465` uses TLS directly, other ports STARTTLS                              |
-| `SMTP_USER`, `SMTP_PASS`   | empty                           | SMTP credentials                                                           |
-| `MAIL_FROM`                | `Avengers <no-reply@localhost>` | Sender of outgoing emails                                                  |
+| Variable                       | Default                         | Description                                                                |
+| ------------------------------ | ------------------------------- | -------------------------------------------------------------------------- |
+| `MONGODB_URI`                  | required                        | MongoDB Atlas connection string                                            |
+| `MONGODB_DB_NAME`              | `avengers`                      | Database name in the cluster                                               |
+| `REDIS_URL`                    | required                        | Redis Cloud connection string; `rediss://` for TLS, password in the URL    |
+| `REDIS_KEY_PREFIX`             | `avengers:`                     | Prefix of every Redis key, so environments can share one Redis             |
+| `JWT_SECRET`                   | required                        | Access-token signing key, at least 32 bytes                                |
+| `NODE_ENV`                     | `development`                   | Either `development` or `production`                                       |
+| `HOST`                         | `localhost`                     | Hostname used by the HTTP server                                           |
+| `PORT`                         | `8000`                          | Port used by the HTTP server                                               |
+| `LOG_LEVEL`                    | `debug` / `info` in prod        | Pino log level                                                             |
+| `CORS_ORIGINS`                 | empty                           | Comma-separated allowed origins; empty allows **no** cross-origin requests |
+| `ACCESS_TOKEN_TTL_MINUTES`     | `15`                            | Lifetime of an access token                                                |
+| `REFRESH_TOKEN_TTL_DAYS`       | `30`                            | Lifetime of a session (refresh token)                                      |
+| `APP_URL`                      | `http://localhost:3000`         | Frontend URL used to build the links in emails                             |
+| `SMTP_HOST`                    | empty; required in production   | SMTP server; when empty, emails are only logged                            |
+| `SMTP_PORT`                    | `587`                           | `465` uses TLS directly, other ports STARTTLS                              |
+| `SMTP_USER`, `SMTP_PASS`       | empty                           | SMTP credentials                                                           |
+| `MAIL_FROM`                    | `Avengers <no-reply@localhost>` | Sender of outgoing emails                                                  |
+| `KEY_ENCRYPTION_KEY`           | required                        | 32 random bytes in base64; encrypts game keys at rest                      |
+| `ORDER_HOLD_MINUTES`           | `10`                            | How long checkout holds keys while the shopper pays                        |
+| `ORDER_PAYMENT_GRACE_SECONDS`  | `300`                           | Extra time an expired order keeps its keys for a late payment              |
+| `ORDER_SWEEP_INTERVAL_SECONDS` | `30`                            | How often expired orders are closed and their keys put back on sale        |
 
-`MONGODB_URI`, `REDIS_URL` and `JWT_SECRET` are required. Generate a secret with
-`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`.
-`PORT` must be an integer between `1` and `65535`. Blank values are treated as
-missing and fall back to the default.
+`MONGODB_URI`, `REDIS_URL`, `JWT_SECRET` and `KEY_ENCRYPTION_KEY` are required.
+Generate a secret with
+`node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
+and an encryption key with
+`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
+Never change `KEY_ENCRYPTION_KEY` on its own: keys stocked under one value
+cannot be read with another. `PORT` must be an integer between `1` and `65535`.
+Blank values are treated as missing and fall back to the default.
 
 Stack traces appear in error responses outside production and are always
 suppressed when `NODE_ENV=production`.
@@ -201,6 +209,40 @@ towards `summary.subtotal`; `summary.canCheckout` is `false` until every line is
 `ok`. Games that left the catalogue are dropped and listed once in `removed`.
 Writes are guarded by a revision number, so two tabs changing the cart at the
 same time cannot lose each other's change.
+
+### Orders
+
+| Method | Path                            | Auth  | Description                                                    |
+| ------ | ------------------------------- | ----- | -------------------------------------------------------------- |
+| `POST` | `/api/v1/orders`                | token | `{ idempotencyKey, expectedTotal }`; checks out the cart       |
+| `GET`  | `/api/v1/orders`                | token | `?page&limit`; newest first                                    |
+| `GET`  | `/api/v1/orders/pending`        | token | The unpaid order, or `null`                                    |
+| `GET`  | `/api/v1/orders/:number`        | token | One order; a paid one includes its keys                        |
+| `POST` | `/api/v1/orders/:number/cancel` | token | Cancels an unpaid order; `409 ORDER_NOT_PENDING` once it ended |
+
+Prices are whole VND. Checking out turns the cart into a `pending` order, copies
+names and prices into it, and holds its keys for `ORDER_HOLD_MINUTES` (10). An
+unpaid order then becomes `expired`; its keys stay held for
+`ORDER_PAYMENT_GRACE_SECONDS` more, so a payment finished at the last second
+still gets them, and a sweep every `ORDER_SWEEP_INTERVAL_SECONDS` puts them back
+on sale.
+
+Concurrency is handled by the database, not by timing:
+
+- keys are reserved in a transaction that decrements the variant's
+  `availableKeys` only while it is high enough, so two shoppers can never get
+  the same last key (the other gets `409 OUT_OF_STOCK`);
+- a partial unique index allows one `pending` order per shopper, so two tabs
+  checking out at once produce one order (`409 PENDING_ORDER_EXISTS`);
+- the client's `idempotencyKey` makes a repeated request answer the same order;
+- `expectedTotal` must match the cart's current total (`409 PRICE_CHANGED`);
+- cancelling, expiring and releasing keys are conditional writes, so they can
+  race each other, and several API instances can sweep at once, without
+  releasing a key twice.
+
+Keys are stored encrypted with AES-256-GCM under `KEY_ENCRYPTION_KEY`, with an
+HMAC fingerprint that stops the same code being stocked twice. In development,
+`npm run keys:fake -- --per-variant 50` tops every variant up with fake keys.
 
 ### Authentication
 

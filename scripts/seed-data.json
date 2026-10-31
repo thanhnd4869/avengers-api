@@ -72,18 +72,18 @@
         {
           "platform": "pc",
           "edition": "Standard",
-          "price": 26,
-          "originalPrice": 35,
-          "currency": "USD",
-          "stock": 90
+          "price": 649000,
+          "originalPrice": 874000,
+          "currency": "VND",
+          "keys": 30
         },
         {
           "platform": "ps4",
           "edition": "Standard",
-          "price": 26,
-          "originalPrice": 35,
-          "currency": "USD",
-          "stock": 70
+          "price": 649000,
+          "originalPrice": 874000,
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -122,10 +122,10 @@
         {
           "platform": "ps4",
           "edition": "Standard",
-          "price": 20,
-          "originalPrice": 25,
-          "currency": "USD",
-          "stock": 40
+          "price": 499000,
+          "originalPrice": 624000,
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -173,26 +173,26 @@
         {
           "platform": "pc",
           "edition": "Standard",
-          "price": 49,
-          "originalPrice": 59,
-          "currency": "USD",
-          "stock": 120
+          "price": 1224000,
+          "originalPrice": 1474000,
+          "currency": "VND",
+          "keys": 30
         },
         {
           "platform": "ps4",
           "edition": "Standard",
-          "price": 59,
+          "price": 1474000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 80
+          "currency": "VND",
+          "keys": 30
         },
         {
           "platform": "xbox",
           "edition": "Standard",
-          "price": 69,
+          "price": 1724000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 60
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -231,10 +231,10 @@
         {
           "platform": "xbox",
           "edition": "Standard",
-          "price": 23,
+          "price": 574000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 500
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -273,26 +273,26 @@
         {
           "platform": "pc",
           "edition": "Standard",
-          "price": 14,
+          "price": 349000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 200
+          "currency": "VND",
+          "keys": 30
         },
         {
           "platform": "ps4",
           "edition": "Standard",
-          "price": 14,
+          "price": 349000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 150
+          "currency": "VND",
+          "keys": 30
         },
         {
           "platform": "xbox",
           "edition": "Standard",
-          "price": 14,
+          "price": 349000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 150
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -331,10 +331,10 @@
         {
           "platform": "ps4",
           "edition": "Standard",
-          "price": 32,
-          "originalPrice": 40,
-          "currency": "USD",
-          "stock": 55
+          "price": 799000,
+          "originalPrice": 999000,
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -373,10 +373,10 @@
         {
           "platform": "ps4",
           "edition": "Standard",
-          "price": 23,
-          "originalPrice": 30,
-          "currency": "USD",
-          "stock": 75
+          "price": 574000,
+          "originalPrice": 749000,
+          "currency": "VND",
+          "keys": 2
         }
       ],
       "reviews": [
@@ -415,10 +415,10 @@
         {
           "platform": "xbox",
           "edition": "Standard",
-          "price": 14,
+          "price": 349000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 500
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -457,10 +457,10 @@
         {
           "platform": "pc",
           "edition": "Standard",
-          "price": 23,
+          "price": 574000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 500
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [
@@ -499,10 +499,10 @@
         {
           "platform": "xbox",
           "edition": "Standard",
-          "price": 20,
+          "price": 499000,
           "originalPrice": null,
-          "currency": "USD",
-          "stock": 500
+          "currency": "VND",
+          "keys": 30
         }
       ],
       "reviews": [

@@ -1,4 +1,5 @@
 import { ERROR_CODE } from '#constants/error-code.js'
+import { ORDER_CURRENCY } from '#constants/order.js'
 import { ConflictError, NotFoundError } from '#errors/app-error.js'
 import {
   CART_MAX_LINES,
@@ -13,10 +14,11 @@ import {
 // editing the same cart in the same instant ever need more than one.
 const SAVE_ATTEMPTS = 5
 
-const roundMoney = (value) => Math.round(value * 100) / 100
+// Prices are whole dong, so totals are whole numbers too.
+const roundMoney = (value) => Math.round(value)
 
 function maxQuantityFor(variant) {
-  return Math.min(CART_MAX_QUANTITY, Math.max(variant.stock, 0))
+  return Math.min(CART_MAX_QUANTITY, Math.max(variant.availableKeys, 0))
 }
 
 function variantNotFound() {
@@ -82,7 +84,7 @@ function priceItems(items, variants) {
       subtotal: roundMoney(
         buyable.reduce((sum, line) => sum + line.lineTotal, 0),
       ),
-      currency: lines[0]?.currency ?? 'USD',
+      currency: lines[0]?.currency ?? ORDER_CURRENCY,
       canCheckout: lines.length > 0 && buyable.length === lines.length,
     },
   }
