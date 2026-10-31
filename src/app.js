@@ -10,7 +10,13 @@ import {
 } from '#middlewares/infrastructure.middleware.js'
 import { notFoundMiddleware } from '#middlewares/not-found.middleware.js'
 
-export function createApp({ router, healthRouter, environment, logger }) {
+export function createApp({
+  router,
+  healthRouter,
+  environment,
+  createRateLimitStore,
+  logger,
+}) {
   const app = express()
 
   app.disable('x-powered-by')
@@ -24,7 +30,12 @@ export function createApp({ router, healthRouter, environment, logger }) {
   // poll a fixed path and must never be throttled into a false negative.
   app.use(healthRouter)
 
-  app.use(createRateLimitMiddleware(environment))
+  app.use(
+    createRateLimitMiddleware({
+      isProduction: environment.isProduction,
+      createStore: createRateLimitStore,
+    }),
+  )
   app.use(createCompressionMiddleware())
   app.use(express.json({ limit: '100kb' }))
   app.use(express.urlencoded({ extended: true, limit: '100kb' }))

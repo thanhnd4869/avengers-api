@@ -1,6 +1,11 @@
 import { connectDatabase, disconnectDatabase } from '#config/database.js'
 import { getEnvironment, loadEnvironmentFile } from '#config/environment.js'
 import { createLogger } from '#config/logger.js'
+import {
+  connectRedis,
+  createRateLimitStore,
+  disconnectRedis,
+} from '#config/redis.js'
 import { createBannerController } from '#controllers/banner.controller.js'
 import { createAdminContactMessageController } from '#controllers/admin-contact-message.controller.js'
 import { createAuthController } from '#controllers/auth.controller.js'
@@ -18,16 +23,20 @@ import { createAuthMiddlewares } from '#middlewares/auth.middleware.js'
 import { createAuthRateLimits } from '#middlewares/infrastructure.middleware.js'
 import * as bannerRepository from '#repositories/banner.repository.js'
 import * as contactMessageRepository from '#repositories/contact-message.repository.js'
-import { pingDatabase } from '#repositories/health.repository.js'
+import {
+  createRedisPing,
+  pingDatabase,
+} from '#repositories/health.repository.js'
 import * as mediaRepository from '#repositories/media.repository.js'
 import * as platformRepository from '#repositories/platform.repository.js'
 import * as postCategoryRepository from '#repositories/post-category.repository.js'
 import * as postRepository from '#repositories/post.repository.js'
 import * as productRepository from '#repositories/product.repository.js'
-import * as sessionRepository from '#repositories/session.repository.js'
+import { createRedisKeys } from '#repositories/redis-keys.js'
+import { createSessionRepository } from '#repositories/session.repository.js'
 import * as socialLinkRepository from '#repositories/social-link.repository.js'
 import * as userIdentityRepository from '#repositories/user-identity.repository.js'
-import * as userTokenRepository from '#repositories/user-token.repository.js'
+import { createUserTokenRepository } from '#repositories/user-token.repository.js'
 import * as userRepository from '#repositories/user.repository.js'
 import { createHealthRouter } from '#routes/health.routes.js'
 import { createRouter } from '#routes/index.js'
@@ -66,14 +75,37 @@ loadEnvironmentFile()
 const environment = getEnvironment()
 const logger = createLogger(environment)
 
-await connectDatabase({
-  mongodbUri: environment.mongodbUri,
-  mongodbDbName: environment.mongodbDbName,
-  logger,
+async function closeConnections() {
+  await Promise.allSettled([disconnectDatabase(), disconnectRedis()])
+}
+
+let redis
+
+try {
+  await connectDatabase({
+    mongodbUri: environment.mongodbUri,
+    mongodbDbName: environment.mongodbDbName,
+    logger,
+  })
+  redis = await connectRedis({ redisUrl: environment.redisUrl, logger })
+} catch (error) {
+  logger.fatal({ err: error }, error.message)
+  await closeConnections()
+  process.exit(1)
+}
+
+const redisKeys = createRedisKeys(environment.redisKeyPrefix)
+const sessionRepository = createSessionRepository({ redis, keys: redisKeys })
+const userTokenRepository = createUserTokenRepository({
+  redis,
+  keys: redisKeys,
 })
+const rateLimitStoreFor = (name) =>
+  createRateLimitStore(redis, redisKeys.rateLimit(name))
 
 const healthService = createHealthService()
 healthService.registerProbe('mongodb', pingDatabase)
+healthService.registerProbe('redis', createRedisPing(redis))
 
 const healthController = createHealthController({ healthService })
 const homeController = createHomeController({
@@ -175,10 +207,14 @@ const app = createApp({
     oauthController,
     adminContactMessageController,
     auth,
-    authRateLimits: createAuthRateLimits(environment),
+    authRateLimits: createAuthRateLimits({
+      isProduction: environment.isProduction,
+      createStore: rateLimitStoreFor,
+    }),
   }),
   healthRouter: createHealthRouter({ healthController }),
   environment,
+  createRateLimitStore: rateLimitStoreFor,
   logger,
 })
 
@@ -193,12 +229,12 @@ try {
   })
 } catch (error) {
   logger.fatal({ err: error }, describeListenError(error, environment))
-  await disconnectDatabase()
+  await closeConnections()
   process.exit(1)
 }
 
 registerShutdownHandlers({
   server,
   logger,
-  onShutdown: disconnectDatabase,
+  onShutdown: closeConnections,
 })

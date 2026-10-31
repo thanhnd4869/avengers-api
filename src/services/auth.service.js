@@ -88,10 +88,6 @@ function invalidRefreshToken() {
   })
 }
 
-function secondsSince(date) {
-  return (Date.now() - date.getTime()) / 1000
-}
-
 export function createAuthService({
   userRepository,
   sessionRepository,
@@ -111,6 +107,9 @@ export function createAuthService({
       userId: user._id,
       refreshTokenHash: hashToken(refreshToken),
       persistent,
+      // Kept on the session so a request is authorised from Redis alone.
+      role: user.role,
+      emailVerified: user.emailVerifiedAt !== null,
       userAgent: (client.userAgent ?? '').slice(0, USER_AGENT_MAX_LENGTH),
       ip: client.ip ?? '',
       expiresAt: refreshExpiresAt,
@@ -121,12 +120,20 @@ export function createAuthService({
       accessToken: await accessTokens.sign({
         userId: String(user._id),
         role: user.role,
-        sessionId: String(session._id),
+        sessionId: session.id,
       }),
       refreshToken,
       refreshExpiresAt,
       persistent,
     }
+  }
+
+  /** Mirrors a change on the user into the session checked per request. */
+  function syncSession(user) {
+    return sessionRepository.updateSessionClaims(user._id, {
+      role: user.role,
+      emailVerified: user.emailVerifiedAt !== null,
+    })
   }
 
   async function sendTokenEmail(
@@ -141,6 +148,14 @@ export function createAuthService({
       tokenHash: hashToken(token),
       expiresAt: new Date(Date.now() + ttlMs),
       email,
+    })
+
+    // Every link sent starts the wait before the next one of its kind, the
+    // one sent at sign-up included, so "resend" cannot replace it at once.
+    await userTokenRepository.startEmailCooldown({
+      userId: user._id,
+      type,
+      seconds: EMAIL_COOLDOWN_SECONDS,
     })
 
     const url = `${appUrl}${path}?token=${encodeURIComponent(token)}`
@@ -165,8 +180,11 @@ export function createAuthService({
     }
 
     if (!user.passwordHash) {
-      const session = await sessionRepository.findActiveSessionById(sessionId)
-      const confirmedAt = session?.authenticatedAt?.getTime() ?? 0
+      const session = await sessionRepository.findSessionByUserId(userId)
+      const confirmedAt =
+        session?.id === sessionId
+          ? (session.authenticatedAt?.getTime() ?? 0)
+          : 0
 
       if (Date.now() - confirmedAt > REAUTH_WINDOW_MS) {
         throw new ForbiddenError(
@@ -191,8 +209,16 @@ export function createAuthService({
     return user
   }
 
+  /**
+   * Claims the next email of this kind for the user, or throws 429 while the
+   * previous one is too recent.
+   */
   async function ensureEmailCooldown(userId, type) {
-    const wait = await secondsUntilResendAllowed(userId, type)
+    const wait = await userTokenRepository.startEmailCooldown({
+      userId,
+      type,
+      seconds: EMAIL_COOLDOWN_SECONDS,
+    })
 
     if (wait > 0) {
       throw new TooManyRequestsError(
@@ -232,20 +258,6 @@ export function createAuthService({
           ttlHours: VERIFY_EMAIL_TTL_HOURS,
         }),
     })
-  }
-
-  async function secondsUntilResendAllowed(userId, type) {
-    const latest = await userTokenRepository.findLatestUserToken({
-      userId,
-      type,
-    })
-
-    if (!latest) return 0
-
-    return Math.max(
-      0,
-      Math.ceil(EMAIL_COOLDOWN_SECONDS - secondsSince(latest.createdAt)),
-    )
   }
 
   return {
@@ -341,21 +353,17 @@ export function createAuthService({
         ) {
           // An old token came back long after it was replaced: someone else
           // holds a copy. Ending the session locks out both parties.
-          await sessionRepository.deleteSessionById(rotated._id)
+          await sessionRepository.deleteUserSession(rotated.userId)
           throw sessionRevoked()
         }
 
         throw invalidRefreshToken()
       }
 
-      if (session.expiresAt.getTime() <= Date.now()) {
-        throw invalidRefreshToken()
-      }
-
       const user = await userRepository.findUserById(session.userId)
 
       if (!user) {
-        await sessionRepository.deleteSessionById(session._id)
+        await sessionRepository.deleteUserSession(session.userId)
         throw invalidRefreshToken()
       }
 
@@ -367,7 +375,7 @@ export function createAuthService({
         : session.expiresAt
 
       const rotated = await sessionRepository.rotateRefreshToken({
-        sessionId: session._id,
+        userId: session.userId,
         currentHash,
         nextHash: hashToken(nextToken),
         expiresAt: refreshExpiresAt,
@@ -378,12 +386,16 @@ export function createAuthService({
         throw invalidRefreshToken()
       }
 
+      // The user is read here anyway, so the session's copy of the claims is
+      // brought up to date at every refresh.
+      await syncSession(user)
+
       return {
         user,
         accessToken: await accessTokens.sign({
           userId: String(user._id),
           role: user.role,
-          sessionId: String(session._id),
+          sessionId: session.id,
         }),
         refreshToken: nextToken,
         refreshExpiresAt,
@@ -399,14 +411,15 @@ export function createAuthService({
       )
 
       if (session) {
-        await sessionRepository.deleteSessionById(session._id)
+        await sessionRepository.deleteUserSession(session.userId)
       }
     },
 
     /**
-     * Resolves a bearer token to the signed-in identity, or throws 401. Reads
-     * the session and the user on every call, so a sign-in elsewhere, a role
-     * change or a password reset takes effect immediately.
+     * Resolves a bearer token to the signed-in identity, or throws 401. One
+     * Redis read per request: the session holds the role and verified flag,
+     * kept in step with the user, so a sign-in elsewhere, a sign-out, a role
+     * change or a deleted account applies at once without touching MongoDB.
      */
     async authenticateAccessToken(accessToken) {
       const claims = accessToken ? await accessTokens.verify(accessToken) : null
@@ -417,36 +430,25 @@ export function createAuthService({
         })
       }
 
-      const [session, user] = await Promise.all([
-        sessionRepository.findActiveSessionById(claims.sessionId),
-        userRepository.findUserById(claims.userId),
-      ])
+      const session = await sessionRepository.findSessionByUserId(claims.userId)
 
-      if (!user) {
-        // The account was deleted; nobody else took the session over.
+      if (!session) {
+        // Signed out, expired, or the account was deleted.
         throw new UnauthorizedError('Your session has ended.', {
           code: ERROR_CODE.SESSION_ENDED,
         })
       }
 
-      if (!session || String(session.userId) !== String(user._id)) {
-        // Only a newer live session means another device took over. Otherwise
-        // the session was signed out or ran out, and the client must not tell
-        // the visitor someone else signed in.
-        if (await sessionRepository.findActiveSessionByUserId(user._id)) {
-          throw sessionRevoked()
-        }
-
-        throw new UnauthorizedError('Your session has ended.', {
-          code: ERROR_CODE.SESSION_ENDED,
-        })
+      if (session.id !== claims.sessionId) {
+        // The user's one session belongs to a newer sign-in elsewhere.
+        throw sessionRevoked()
       }
 
       return {
-        userId: String(user._id),
-        role: user.role,
-        sessionId: String(session._id),
-        emailVerified: user.emailVerifiedAt !== null,
+        userId: session.userId,
+        role: session.role,
+        sessionId: session.id,
+        emailVerified: session.emailVerified,
       }
     },
 
@@ -478,6 +480,8 @@ export function createAuthService({
       if (!user) {
         throw invalidLink()
       }
+
+      await syncSession(user)
 
       return { data: user }
     },
@@ -517,10 +521,11 @@ export function createAuthService({
       // so this endpoint cannot be used to discover accounts.
       if (
         !user ||
-        (await secondsUntilResendAllowed(
-          user._id,
-          USER_TOKEN_TYPE.RESET_PASSWORD,
-        )) > 0
+        (await userTokenRepository.startEmailCooldown({
+          userId: user._id,
+          type: USER_TOKEN_TYPE.RESET_PASSWORD,
+          seconds: EMAIL_COOLDOWN_SECONDS,
+        })) > 0
       ) {
         return FORGOT_PASSWORD_REPLY
       }
@@ -556,7 +561,7 @@ export function createAuthService({
         await hashPassword(password),
       )
       // Whoever knew the old password is signed out everywhere.
-      await sessionRepository.deleteSessionsByUserId(used.userId)
+      await sessionRepository.deleteUserSession(used.userId)
       // Following the link proves the visitor reads this inbox.
       await userRepository.markEmailVerified(used.userId)
 
@@ -600,7 +605,9 @@ export function createAuthService({
       ) {
         throw fieldError('currentPassword', 'The password is incorrect.')
       }
-      const session = await sessionRepository.findActiveSessionById(sessionId)
+
+      const session = await sessionRepository.findSessionByUserId(userId)
+      const persistent = session?.id === sessionId && session.persistent
 
       await userRepository.updatePasswordHash(
         user._id,
@@ -611,10 +618,7 @@ export function createAuthService({
         type: USER_TOKEN_TYPE.RESET_PASSWORD,
       })
 
-      return issueSession(user, {
-        persistent: session?.persistent ?? false,
-        client,
-      })
+      return issueSession(user, { persistent, client })
     },
 
     /**
@@ -718,6 +722,7 @@ export function createAuthService({
           type: USER_TOKEN_TYPE.VERIFY_EMAIL,
         }),
       ])
+      await syncSession(user)
 
       return { data: user }
     },
@@ -734,8 +739,11 @@ export function createAuthService({
         )
       }
 
-      await sessionRepository.deleteSessionsByUserId(user._id)
-      await userTokenRepository.deleteAllUserTokens(user._id)
+      const tokenTypes = Object.values(USER_TOKEN_TYPE)
+
+      await sessionRepository.deleteUserSession(user._id)
+      await userTokenRepository.deleteAllUserTokens(user._id, tokenTypes)
+      await userTokenRepository.clearEmailCooldowns(user._id, tokenTypes)
       await userIdentityRepository.deleteUserIdentities(user._id)
       await userRepository.deleteUserById(user._id)
     },

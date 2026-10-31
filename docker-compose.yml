@@ -1,0 +1,24 @@
+# Local services for development. MongoDB stays on Atlas; only Redis runs here.
+#
+#   docker compose up -d      start Redis in the background
+#   docker compose down       stop it (data is kept in the volume)
+services:
+  redis:
+    image: redis:8-alpine
+    container_name: avengers-redis
+    # Append-only file, so sessions and email links survive a restart like
+    # they would on a production Redis with persistence on.
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis-data:

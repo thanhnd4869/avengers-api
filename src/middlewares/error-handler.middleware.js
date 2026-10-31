@@ -1,6 +1,10 @@
 import { ERROR_CODE } from '#constants/error-code.js'
 import { HTTP_STATUS } from '#constants/http-status.js'
-import { isOperationalError, ValidationError } from '#errors/app-error.js'
+import {
+  isOperationalError,
+  ServiceUnavailableError,
+  ValidationError,
+} from '#errors/app-error.js'
 
 // body-parser rejects unreadable payloads before any handler runs, so those
 // failures would otherwise be reported as internal faults.
@@ -10,7 +14,24 @@ const BODY_PARSER_MESSAGE = Object.freeze({
   'encoding.unsupported': 'Request body encoding is not supported.',
 })
 
+// node-redis raises these while the connection is down. Sessions and sign-in
+// limits live in Redis, so such a request cannot be served right now, which
+// is a 503 the client may retry rather than a fault in the API.
+const REDIS_UNAVAILABLE = new Set([
+  'ClientOfflineError',
+  'ClientClosedError',
+  'ConnectionTimeoutError',
+  'SocketClosedUnexpectedlyError',
+  'ReconnectStrategyError',
+])
+
 function toOperationalError(error) {
+  if (REDIS_UNAVAILABLE.has(error?.constructor?.name)) {
+    return new ServiceUnavailableError(
+      'The service is temporarily unavailable. Please try again shortly.',
+    )
+  }
+
   const message = BODY_PARSER_MESSAGE[error?.type]
 
   return message === undefined ? error : new ValidationError(message)

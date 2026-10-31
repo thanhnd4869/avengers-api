@@ -52,10 +52,22 @@ export function createRequestLoggerMiddleware({ logger }) {
 // headers and 429 path still behave the same, but with far more headroom.
 const RATE_LIMIT = Object.freeze({ production: 300, development: 10_000 })
 
-function createLimiter({ windowMs, limit }) {
+/**
+ * Counters live in Redis, shared by every API process and kept across
+ * restarts, so a budget means the same thing however many instances run.
+ * `createStore(name)` is supplied by the composition root.
+ *
+ * `passOnStoreError` decides what happens while Redis is unreachable: the
+ * general limiter lets traffic through so the shop stays browsable, while the
+ * sign-in and email limiters refuse, since an unguarded login is the one
+ * thing the limit exists to prevent.
+ */
+function createLimiter({ name, windowMs, limit, createStore, failOpen }) {
   return rateLimit({
     windowMs,
     limit,
+    store: createStore(name),
+    passOnStoreError: failOpen,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: {
@@ -68,10 +80,13 @@ function createLimiter({ windowMs, limit }) {
   })
 }
 
-export function createRateLimitMiddleware({ isProduction }) {
+export function createRateLimitMiddleware({ isProduction, createStore }) {
   return createLimiter({
+    name: 'global',
     windowMs: 15 * 60 * 1000,
     limit: isProduction ? RATE_LIMIT.production : RATE_LIMIT.development,
+    createStore,
+    failOpen: true,
   })
 }
 
@@ -82,12 +97,14 @@ const MINUTE = 60 * 1000
  * top of the global limiter. Development multiplies them so that working on
  * the sign-in form does not lock the developer out.
  */
-export function createAuthRateLimits({ isProduction }) {
+export function createAuthRateLimits({ isProduction, createStore }) {
   const scale = isProduction ? 1 : 20
+  const limiter = (name, windowMs, limit) =>
+    createLimiter({ name, windowMs, limit, createStore, failOpen: false })
 
   return {
-    login: createLimiter({ windowMs: 15 * MINUTE, limit: 10 * scale }),
-    register: createLimiter({ windowMs: 60 * MINUTE, limit: 5 * scale }),
-    email: createLimiter({ windowMs: 60 * MINUTE, limit: 5 * scale }),
+    login: limiter('login', 15 * MINUTE, 10 * scale),
+    register: limiter('register', 60 * MINUTE, 5 * scale),
+    email: limiter('email', 60 * MINUTE, 5 * scale),
   }
 }

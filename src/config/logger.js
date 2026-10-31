@@ -16,6 +16,8 @@ export function createLogger({ logLevel, isProduction }) {
         // A connection string embeds the database password in plain text.
         'mongodbUri',
         '*.mongodbUri',
+        'redisUrl',
+        '*.redisUrl',
         'uri',
         '*.uri',
       ],

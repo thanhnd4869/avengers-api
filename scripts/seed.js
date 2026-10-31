@@ -22,15 +22,14 @@ import { Post } from '#models/post.model.js'
 import { PostCategory } from '#models/post-category.model.js'
 import { Product } from '#models/product.model.js'
 import { ProductVariant } from '#models/product-variant.model.js'
-import { Session } from '#models/session.model.js'
 import { SocialLink } from '#models/social-link.model.js'
 import { UserIdentity } from '#models/user-identity.model.js'
-import { UserToken } from '#models/user-token.model.js'
 import { User } from '#models/user.model.js'
 
 // Every model, including the account ones that get no seed data, so each
-// collection is recreated with its indexes (unique email, token hashes,
-// provider ids) before the API accepts its first sign-up.
+// collection is recreated with its indexes (unique email, provider ids)
+// before the API accepts its first sign-up. Sessions and emailed links live
+// in Redis, which seeding leaves alone.
 const MODELS = [
   Platform,
   Product,
@@ -42,8 +41,6 @@ const MODELS = [
   SocialLink,
   ContactMessage,
   User,
-  Session,
-  UserToken,
   UserIdentity,
 ]
 

@@ -44,9 +44,38 @@ The ones that ran are recorded in the `migrations` collection. Run
 after 10 minutes if a run is killed. `npm run seed` builds the latest schema
 directly, so it records every existing migration as already applied.
 
+## Redis
+
+MongoDB keeps what must last: users, linked Google and Facebook accounts, and
+the catalogue. Redis keeps what is short-lived and read on every request, each
+key expiring on its own:
+
+| Key (after `REDIS_KEY_PREFIX`)      | Type   | Holds                                                     |
+| ----------------------------------- | ------ | --------------------------------------------------------- |
+| `session:<userId>`                  | hash   | The user's one session: id, refresh token hash, role, ... |
+| `refresh:<hash>`                    | string | Refresh token → user, to find the session from the cookie |
+| `refresh-prev:<hash>`               | string | The token replaced last, to tell reuse from expiry        |
+| `user-token:<hash>`                 | string | An emailed link (verify, reset, change email), one use    |
+| `user-token-latest:<userId>:<type>` | string | The newest link of a kind, so a new one replaces it       |
+| `email-cooldown:<userId>:<type>`    | string | Present for 60 seconds after an email is sent             |
+| `rate-limit:<name>:<ip>`            | string | Rate-limit counters, shared by every API process          |
+
+A request is authorised from one Redis read: the session holds the role and the
+verified flag, updated whenever the user changes. Writes that touch several keys
+(starting, rotating or ending a session, issuing a link) run as Lua scripts,
+which Redis applies atomically.
+
+Like MongoDB, Redis must be reachable when the API starts, or it exits with a
+clear error. If the connection drops later, it reconnects on its own; meanwhile
+requests that need a session or a sign-in limit answer `503`, the catalogue
+keeps working, and `/health/ready` reports `redis` as down. Losing Redis data
+signs everyone out, but no account or order is lost; production should run Redis
+with persistence (AOF) on.
+
 ## Technology Stack
 
 - MongoDB Atlas for persistent data storage
+- Redis for sessions, emailed links and rate limits
 - Express for the HTTP API
 - React for the separate frontend application
 - Node.js 24 for the backend runtime
@@ -55,6 +84,7 @@ directly, so it records every existing migration as already applied.
 
 - Node.js `>=24.11.0 <25`
 - npm `>=11`
+- Redis 7 or later; for development, Docker to run it from `docker-compose.yml`
 
 ## Getting Started
 
@@ -73,6 +103,12 @@ cp .env.example .env
 On Windows Command Prompt, use `copy .env.example .env` instead. The application
 also runs without a `.env` file by using its default values.
 
+Start Redis in the background (data is kept in a Docker volume):
+
+```sh
+docker compose up -d
+```
+
 Start the development server:
 
 ```sh
@@ -86,6 +122,9 @@ The API is available at `http://localhost:8000` by default.
 | Variable                   | Default                         | Description                                                                |
 | -------------------------- | ------------------------------- | -------------------------------------------------------------------------- |
 | `MONGODB_URI`              | required                        | MongoDB Atlas connection string                                            |
+| `MONGODB_DB_NAME`          | `avengers`                      | Database name in the cluster                                               |
+| `REDIS_URL`                | `redis://localhost:6379`        | Redis connection; `rediss://` for TLS, password in the URL                 |
+| `REDIS_KEY_PREFIX`         | `avengers:`                     | Prefix of every Redis key, so environments can share one Redis             |
 | `JWT_SECRET`               | required                        | Access-token signing key, at least 32 bytes                                |
 | `NODE_ENV`                 | `development`                   | Either `development` or `production`                                       |
 | `HOST`                     | `localhost`                     | Hostname used by the HTTP server                                           |
@@ -156,17 +195,21 @@ production); with `remember: true` it lasts `REFRESH_TOKEN_TTL_DAYS`, otherwise
 until the browser closes. It is rotated on every refresh, and presenting a
 replaced token again ends the session.
 
-An account has **one** session at a time: signing in elsewhere ends the previous
-one, and its next request gets `401` with code `SESSION_REVOKED`. A session that
-was signed out or has expired answers `401` with code `SESSION_ENDED` instead.
-The session is checked on every authenticated request.
+An account has **one** session at a time, kept in Redis: signing in elsewhere
+replaces it, and the previous device's next request gets `401` with code
+`SESSION_REVOKED`. A session that was signed out, has expired or belonged to a
+deleted account answers `401` with code `SESSION_ENDED` instead. Every
+authenticated request checks the session in Redis, so these apply at once.
 
 Not signed in is `401`; signed in without the required role is `403`. Every
 `/admin` route requires the `admin` role and a verified email. Admins are
 created only with `npm run create-admin`; sign-up always creates `user`.
 
 Login is limited to 10 attempts per 15 minutes per IP, and sign-up and email
-sending to 5 per hour (20 times more in development).
+sending to 5 per hour (20 times more in development). The counters live in
+Redis, so they hold across restarts and every API process shares them. While
+Redis is unreachable these limited routes answer `503` rather than run
+unguarded; the general limit lets traffic through.
 
 ### Sign-in with Google and Facebook
 
@@ -228,22 +271,22 @@ older rules keep working.
 
 All scripts are compatible with Windows, Ubuntu, and macOS.
 
-| Command                                            | Description                                                                      |
-| -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `npm start`                                        | Starts the application                                                           |
-| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes            |
-| `npm run seed`                                     | Drops **every** collection (users and sessions included) and loads sample data   |
-| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`)  |
-| `npm run migrate -- status`                        | Lists every migration and when it ran                                            |
-| `npm run migrate -- up`                            | Runs the pending migrations, oldest first                                        |
-| `npm run migrate -- down`                          | Reverts the last migration that ran                                              |
-| `npm run migrate -- create <description>`          | Adds a new migration file to `migrations/`                                       |
-| `npm run lint`                                     | Checks JavaScript files with ESLint                                              |
-| `npm run lint:fix`                                 | Fixes automatically repairable ESLint issues                                     |
-| `npm run format`                                   | Formats supported project files with Prettier                                    |
-| `npm run format:check`                             | Checks formatting without modifying files                                        |
-| `npm run commitlint -- --edit <message-file>`      | Validates a commit message file                                                  |
-| `npm run prepare`                                  | Installs the project-managed Husky hooks; normally runs automatically on install |
+| Command                                            | Description                                                                                    |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm start`                                        | Starts the application                                                                         |
+| `npm run dev`                                      | Starts the application with Nodemon and restarts after source changes                          |
+| `npm run seed`                                     | Drops **every** MongoDB collection (users included) and loads sample data; Redis is left alone |
+| `npm run create-admin -- --email <e> [--name <n>]` | Creates or promotes an admin; asks for the password (or reads `ADMIN_PASSWORD`)                |
+| `npm run migrate -- status`                        | Lists every migration and when it ran                                                          |
+| `npm run migrate -- up`                            | Runs the pending migrations, oldest first                                                      |
+| `npm run migrate -- down`                          | Reverts the last migration that ran                                                            |
+| `npm run migrate -- create <description>`          | Adds a new migration file to `migrations/`                                                     |
+| `npm run lint`                                     | Checks JavaScript files with ESLint                                                            |
+| `npm run lint:fix`                                 | Fixes automatically repairable ESLint issues                                                   |
+| `npm run format`                                   | Formats supported project files with Prettier                                                  |
+| `npm run format:check`                             | Checks formatting without modifying files                                                      |
+| `npm run commitlint -- --edit <message-file>`      | Validates a commit message file                                                                |
+| `npm run prepare`                                  | Installs the project-managed Husky hooks; normally runs automatically on install               |
 
 ## Error Handling
 
@@ -522,7 +565,8 @@ avengers-api/
 |   |-- commit-msg
 |   `-- pre-commit
 |-- migrations/
-|   `-- 20261031000000-partial-unique-user-email.js
+|   |-- 20261031000000-partial-unique-user-email.js
+|   `-- 20261031063000-move-sessions-and-email-links-to-redis.js
 |-- scripts/
 |   |-- create-admin.js
 |   |-- migrate.js
@@ -532,7 +576,8 @@ avengers-api/
 |   |-- config/
 |   |   |-- database.js
 |   |   |-- environment.js
-|   |   `-- migrations.js
+|   |   |-- migrations.js
+|   |   `-- redis.js
 |   |-- constants/
 |   |   `-- order-status.js
 |   |-- controllers/
@@ -579,6 +624,7 @@ avengers-api/
 |-- .prettierignore
 |-- .prettierrc.json
 |-- commitlint.config.js
+|-- docker-compose.yml
 |-- eslint.config.js
 |-- nodemon.json
 |-- package-lock.json

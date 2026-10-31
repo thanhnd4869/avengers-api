@@ -57,6 +57,16 @@ function readMongodbUri(source) {
   return uri
 }
 
+function readRedisUrl(source) {
+  const url = readString(source, 'REDIS_URL', 'redis://localhost:6379')
+
+  if (!/^rediss?:\/\//.test(url)) {
+    throw new RangeError('REDIS_URL must start with redis:// or rediss://')
+  }
+
+  return url
+}
+
 // HS256 is only as strong as its key; RFC 7518 requires at least 256 bits.
 const JWT_SECRET_MIN_BYTES = 32
 
@@ -158,6 +168,10 @@ export function getEnvironment(source = process.env) {
     port: readPort(source),
     mongodbUri: readMongodbUri(source),
     mongodbDbName: readString(source, 'MONGODB_DB_NAME', 'avengers'),
+    redisUrl: readRedisUrl(source),
+    // Every key starts with this, so several apps or environments can share
+    // one Redis without stepping on each other.
+    redisKeyPrefix: readString(source, 'REDIS_KEY_PREFIX', 'avengers:'),
     corsOrigins: Object.freeze(readOrigins(source)),
     logLevel: readString(source, 'LOG_LEVEL', isProduction ? 'info' : 'debug'),
     exposeStack: !isProduction,

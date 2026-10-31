@@ -120,7 +120,7 @@ export function createOAuthService({
       // password they chose may not be the owner's. The owner, now proven by
       // Google, takes the account over and everyone else is signed out.
       user = await userRepository.detachPassword(user._id)
-      await sessionRepository.deleteSessionsByUserId(user._id)
+      await sessionRepository.deleteUserSession(user._id)
       await userTokenRepository.deleteUserTokens({
         userId: user._id,
         type: USER_TOKEN_TYPE.RESET_PASSWORD,
@@ -225,7 +225,16 @@ export function createOAuthService({
       !(await userRepository.findUserByEmail(profile.email))
     ) {
       try {
-        await userRepository.setVerifiedEmail(user._id, profile.email)
+        const updated = await userRepository.setVerifiedEmail(
+          user._id,
+          profile.email,
+        )
+
+        if (updated) {
+          await sessionRepository.updateSessionClaims(updated._id, {
+            emailVerified: true,
+          })
+        }
       } catch (error) {
         if (!userRepository.isDuplicateKeyError(error)) throw error
       }
@@ -244,17 +253,20 @@ export function createOAuthService({
       throw new OAuthFlowError(OAUTH_ERROR.REAUTH_MISMATCH)
     }
 
-    await sessionRepository.markSessionAuthenticated(flow.sessionId)
+    await sessionRepository.markSessionAuthenticated(user._id)
   }
 
-  /** The user who started a link or confirm flow, if still signed in. */
+  /**
+   * The user who started a link or confirm flow, if that same session is
+   * still the live one (not signed out, nor replaced by another device).
+   */
   async function signedInUser(flow) {
     const [session, user] = await Promise.all([
-      sessionRepository.findActiveSessionById(flow.sessionId),
+      sessionRepository.findSessionByUserId(flow.userId),
       userRepository.findUserById(flow.userId),
     ])
 
-    if (!session || !user || String(session.userId) !== String(user._id)) {
+    if (!session || !user || session.id !== flow.sessionId) {
       throw new OAuthFlowError(OAUTH_ERROR.EXPIRED)
     }
 
