@@ -29,7 +29,11 @@ export function createProductController({ productService }) {
       response
         .status(HTTP_STATUS.OK)
         .json(
-          await productService.listReviews(request.params.slug, request.query),
+          await productService.listReviews(
+            request.params.slug,
+            request.query,
+            request.auth?.userId,
+          ),
         )
     },
 

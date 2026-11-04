@@ -184,6 +184,22 @@ checks poll a fixed path and must never be throttled into a false negative.
 | `GET`  | `/api/v1/products/:slug/reviews` | `?page&limit`; newest first                                                           |
 | `GET`  | `/api/v1/product-categories`     | Genres such as Action Games or FPS                                                    |
 
+### Reviews
+
+| Method   | Path                                  | Auth  | Description                                                  |
+| -------- | ------------------------------------- | ----- | ------------------------------------------------------------ |
+| `GET`    | `/api/v1/products/:slug/reviews/mine` | token | `{ canReview, purchased, review }` for the signed-in shopper |
+| `POST`   | `/api/v1/products/:slug/reviews`      | token | `{ rating: 1-5, content: 10-2000 chars }`; buyers only       |
+| `PATCH`  | `/api/v1/products/:slug/reviews/mine` | token | `{ rating, content }`                                        |
+| `DELETE` | `/api/v1/products/:slug/reviews/mine` | token | Deletes the shopper's review                                 |
+
+Only a shopper with a paid order for a game may review it
+(`403 REVIEW_NOT_ALLOWED`), once (`409 REVIEW_EXISTS`, enforced by a unique
+index). Listed reviews carry `verifiedPurchase` and, for a signed-in reader,
+`mine`. Every write recomputes the product's `ratingAverage` and `ratingCount`
+from its reviews in the same transaction, so concurrent reviews cannot leave
+them wrong. Deleting an account deletes its reviews.
+
 `sort` is one of `-sales` (default), `-rating`, `-releaseDate`, `releaseDate`,
 `-discount`, `price` and `-price`. A product matches `minPrice`/`maxPrice` when
 one of its variants (on `platform`, if given) is priced within the range. The

@@ -25,6 +25,7 @@ export function createRouter({
   bannerController,
   platformController,
   productController,
+  reviewController,
   cartController,
   orderController,
   paymentController,
@@ -57,7 +58,15 @@ export function createRouter({
 
   router.use('/banners', createBannerRouter({ bannerController }))
   router.use('/platforms', createPlatformRouter({ platformController }))
-  router.use('/products', createProductRouter({ productController }))
+  router.use(
+    '/products',
+    createProductRouter({
+      productController,
+      reviewController,
+      auth,
+      reviewRateLimit: authRateLimits.review,
+    }),
+  )
   router.use(
     '/product-categories',
     createProductCategoryRouter({ productController }),

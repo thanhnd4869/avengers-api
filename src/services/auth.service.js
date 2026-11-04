@@ -94,6 +94,7 @@ export function createAuthService({
   userTokenRepository,
   userIdentityRepository,
   cartRepository,
+  reviewRepository,
   accessTokens,
   mailer,
   logger,
@@ -747,6 +748,8 @@ export function createAuthService({
       await userTokenRepository.clearEmailCooldowns(user._id, tokenTypes)
       await userIdentityRepository.deleteUserIdentities(user._id)
       await cartRepository.deleteCart(user._id)
+      // Reviews go with the account; product ratings are recomputed.
+      await reviewRepository.deleteAllUserReviews(user._id)
       await userRepository.deleteUserById(user._id)
     },
   }

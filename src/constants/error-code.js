@@ -42,6 +42,10 @@ export const ERROR_CODE = Object.freeze({
   PAYMENT_UNAVAILABLE: 'PAYMENT_UNAVAILABLE',
   // The gateway's reply could not be trusted (bad signature, wrong order).
   INVALID_PAYMENT_RESULT: 'INVALID_PAYMENT_RESULT',
+  // Only shoppers who paid for a game may review it.
+  REVIEW_NOT_ALLOWED: 'REVIEW_NOT_ALLOWED',
+  // The shopper already reviewed this game; they may edit that review.
+  REVIEW_EXISTS: 'REVIEW_EXISTS',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',

@@ -21,6 +21,7 @@ import { createPlatformController } from '#controllers/platform.controller.js'
 import { createPostCategoryController } from '#controllers/post-category.controller.js'
 import { createPostController } from '#controllers/post.controller.js'
 import { createProductController } from '#controllers/product.controller.js'
+import { createReviewController } from '#controllers/review.controller.js'
 import { createSocialLinkController } from '#controllers/social-link.controller.js'
 import { createAuthMiddlewares } from '#middlewares/auth.middleware.js'
 import { createAuthRateLimits } from '#middlewares/infrastructure.middleware.js'
@@ -37,6 +38,7 @@ import * as platformRepository from '#repositories/platform.repository.js'
 import * as postCategoryRepository from '#repositories/post-category.repository.js'
 import * as postRepository from '#repositories/post.repository.js'
 import * as productRepository from '#repositories/product.repository.js'
+import * as reviewRepository from '#repositories/review.repository.js'
 import { createRedisKeys } from '#repositories/redis-keys.js'
 import { createSessionRepository } from '#repositories/session.repository.js'
 import * as socialLinkRepository from '#repositories/social-link.repository.js'
@@ -61,6 +63,7 @@ import { createPlatformService } from '#services/platform.service.js'
 import { createPostCategoryService } from '#services/post-category.service.js'
 import { createPostService } from '#services/post.service.js'
 import { createProductService } from '#services/product.service.js'
+import { createReviewService } from '#services/review.service.js'
 import { createSocialLinkService } from '#services/social-link.service.js'
 import { createAccessTokenSigner } from '#utils/jwt.js'
 import { createKeyCipher } from '#utils/key-cipher.js'
@@ -131,6 +134,13 @@ const bannerController = createBannerController({
 const platformController = createPlatformController({
   platformService: createPlatformService({ platformRepository }),
 })
+const reviewController = createReviewController({
+  reviewService: createReviewService({
+    reviewRepository,
+    productRepository,
+    userRepository,
+  }),
+})
 const productController = createProductController({
   productService: createProductService({ productRepository }),
 })
@@ -192,6 +202,7 @@ const authService = createAuthService({
   userTokenRepository,
   userIdentityRepository,
   cartRepository,
+  reviewRepository,
   accessTokens: createAccessTokenSigner({
     secret: environment.jwtSecret,
     ttlMinutes: environment.accessTokenTtlMinutes,
@@ -243,6 +254,7 @@ const app = createApp({
     bannerController,
     platformController,
     productController,
+    reviewController,
     cartController,
     orderController,
     paymentController,

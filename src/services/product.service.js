@@ -5,6 +5,7 @@ import {
   validateRelatedProductsQuery,
 } from '#validations/product.validation.js'
 import { toPaginatedResponse } from './pagination.js'
+import { toPublicReview } from './review.service.js'
 
 function productNotFound() {
   return new NotFoundError('Product not found')
@@ -51,7 +52,7 @@ export function createProductService({ productRepository }) {
       return { data: products }
     },
 
-    async listReviews(slug, query) {
+    async listReviews(slug, query, viewerId = null) {
       const { page, limit } = validateProductReviewsQuery(query)
       const productId = await productRepository.findProductIdBySlug(slug)
 
@@ -65,7 +66,10 @@ export function createProductService({ productRepository }) {
         limit,
       })
 
-      return toPaginatedResponse(reviews, { page, limit, total })
+      return toPaginatedResponse(
+        reviews.map((review) => toPublicReview(review, viewerId)),
+        { page, limit, total },
+      )
     },
 
     async listCategories() {

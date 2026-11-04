@@ -394,7 +394,7 @@ export async function findProductReviews({ productId, page, limit }) {
       .sort({ createdAt: -1, _id: 1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select('authorName rating content createdAt'),
+      .select('authorName rating content createdAt updatedAt userId'),
     ProductReview.countDocuments(filter),
   ])
 
