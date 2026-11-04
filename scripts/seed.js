@@ -17,12 +17,15 @@ import {
 import { Banner } from '#models/banner.model.js'
 import { Cart } from '#models/cart.model.js'
 import { Order } from '#models/order.model.js'
+import { Page } from '#models/page.model.js'
 import { Payment } from '#models/payment.model.js'
 import { ContactMessage } from '#models/contact-message.model.js'
+import { Gallery } from '#models/gallery.model.js'
 import { Media } from '#models/media.model.js'
 import { Platform } from '#models/platform.model.js'
 import { Post } from '#models/post.model.js'
 import { PostCategory } from '#models/post-category.model.js'
+import { PostComment } from '#models/post-comment.model.js'
 import { Product } from '#models/product.model.js'
 import { ProductCategory } from '#models/product-category.model.js'
 import { ProductKey } from '#models/product-key.model.js'
@@ -47,8 +50,11 @@ const MODELS = [
   ProductReview,
   PostCategory,
   Post,
+  PostComment,
   Banner,
+  Page,
   Media,
+  Gallery,
   SocialLink,
   ContactMessage,
   User,
@@ -126,15 +132,36 @@ async function seed(data) {
   const categories = await PostCategory.insertMany(data.postCategories)
   const categoryIds = idsBySlug(categories)
 
-  await Post.insertMany(
-    data.posts.map(({ category, ...post }) => ({
+  const posts = await Post.insertMany(
+    data.posts.map(({ category, comments: _comments, ...post }) => ({
       ...post,
       categoryId: lookup(categoryIds, category, 'post category'),
     })),
   )
+  const postIds = idsBySlug(posts)
 
+  // Sample comments have no author account; the posts' `commentCount` in the
+  // seed data already matches them.
+  for (const post of data.posts) {
+    const postId = lookup(postIds, post.slug, 'post')
+
+    for (const { replies, ...thread } of post.comments ?? []) {
+      const [first] = await PostComment.insertMany([{ ...thread, postId }])
+
+      await PostComment.insertMany(
+        replies.map((reply) => ({ ...reply, postId, parentId: first._id })),
+      )
+    }
+  }
+
+  await Page.insertMany(
+    JSON.parse(
+      await readFile(new URL('./pages-data.json', import.meta.url), 'utf8'),
+    ),
+  )
   await Banner.insertMany(data.banners)
   await Media.insertMany(data.media)
+  await Gallery.insertMany(data.galleries)
   await SocialLink.insertMany(data.socialLinks)
 }
 

@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "faq",
+    "title": "Help centre",
+    "summary": "Answers to the questions we hear most about buying and activating game keys.",
+    "sections": [
+      {
+        "heading": "What do I get when I buy a game?",
+        "body": "A digital activation key for the platform you chose (PC, PS4 or Xbox). You redeem it on that platform's official store and the game is added to your library there. Nothing is shipped."
+      },
+      {
+        "heading": "When do I receive my key?",
+        "body": "Straight after payment. Your keys appear on the order page under Account > Orders, and if your account has an email address we also send them to you by email."
+      },
+      {
+        "heading": "Why is there a 10-minute timer at checkout?",
+        "body": "When you check out, we set aside the exact keys you are buying so nobody else can take them while you pay. If the payment is not finished within 10 minutes, the keys go back on sale and the order expires. You can simply check out again."
+      },
+      {
+        "heading": "How can I pay?",
+        "body": "We accept payment through VNPay: domestic ATM cards and bank accounts, international cards and VNPay QR. Prices are in Vietnamese đồng (VND) and include everything; there is no delivery fee."
+      },
+      {
+        "heading": "My payment went through but I don't see my keys.",
+        "body": "Payments are usually confirmed within seconds. If the result page says the payment is still processing, wait a minute and open Account > Orders; you do not need to pay again. If an order still shows as unpaid after 15 minutes, contact us with the order number."
+      },
+      {
+        "heading": "Do I need an account?",
+        "body": "You can browse and fill a cart without one, but you sign in to check out, because your keys are kept in your account. The games you added before signing in stay in your cart."
+      },
+      {
+        "heading": "How do I activate a key?",
+        "body": "On PC, open the store client named on the product page (for example Steam), choose \"Activate a product\" and enter the key. On PlayStation, go to PlayStation Store > Redeem codes. On Xbox, go to Microsoft Store > Redeem a code. Each key works once, on the platform it was bought for."
+      },
+      {
+        "heading": "Can I review a game?",
+        "body": "Yes, once you have bought it. Open the game's page or your order and choose \"Write a review\". Reviews from buyers carry a \"Verified purchase\" badge, and you can edit or delete yours at any time."
+      }
+    ]
+  },
+  {
+    "slug": "refund-policy",
+    "title": "Refund policy",
+    "summary": "When you can get your money back for a digital key.",
+    "sections": [
+      {
+        "heading": "Keys that have not been revealed",
+        "body": "Because a key can be used as soon as it is seen, we can refund an order only while its keys have not been revealed or redeemed. Contact us within 14 days of purchase with your order number."
+      },
+      {
+        "heading": "Keys that do not work",
+        "body": "If a key is rejected by the platform as invalid or already used, contact us within 14 days with your order number and a screenshot of the error. We will replace the key or refund it in full."
+      },
+      {
+        "heading": "Payments we could not use",
+        "body": "If you were charged twice for one order, or your payment arrived after the keys had sold out, we refund the payment that could not be used. You will see a note about it on your order, and the money is returned to the card or account you paid with."
+      },
+      {
+        "heading": "How refunds are paid",
+        "body": "Refunds go back through VNPay to the original payment method. Banks usually take 5 to 15 working days to show the money in your account."
+      },
+      {
+        "heading": "What we cannot refund",
+        "body": "Keys that have been redeemed, games bought for the wrong platform once the key has been revealed, and region or hardware requirements stated on the product page."
+      }
+    ]
+  },
+  {
+    "slug": "terms",
+    "title": "Terms of service",
+    "summary": "The agreement between you and Avengers when you use the shop.",
+    "sections": [
+      {
+        "heading": "Using the shop",
+        "body": "By creating an account or placing an order you agree to these terms. You must give accurate details and keep your password private; you are responsible for what is done with your account."
+      },
+      {
+        "heading": "Orders and prices",
+        "body": "Prices are shown in VND and may change at any time, but the price of an order is fixed when you check out. An order is complete once payment is confirmed; until then the keys are only held for you for a limited time."
+      },
+      {
+        "heading": "Digital keys",
+        "body": "Each key is licensed for personal use on the platform it was sold for, under that platform's own terms. Reselling keys bought here is not allowed."
+      },
+      {
+        "heading": "Reviews",
+        "body": "Reviews must be your own honest opinion of a game you bought. We may remove reviews that are abusive, off-topic or misleading."
+      },
+      {
+        "heading": "Changes to these terms",
+        "body": "We may update these terms. The date at the top of this page shows when they last changed, and the version in force when you placed an order applies to that order."
+      }
+    ]
+  },
+  {
+    "slug": "privacy",
+    "title": "Privacy policy",
+    "summary": "What we collect about you, why, and what you can do about it.",
+    "sections": [
+      {
+        "heading": "What we collect",
+        "body": "Your email address, display name and password (stored only as a secure hash); if you sign in with Google or Facebook, the account identifier they share with us. We also keep your cart, your orders and the reviews you write."
+      },
+      {
+        "heading": "Payments",
+        "body": "Card and bank details are entered on VNPay's pages and never reach us. We keep the payment reference, amount and result VNPay reports, so we can deliver your keys and handle refunds."
+      },
+      {
+        "heading": "Your keys",
+        "body": "The keys you buy are stored encrypted and are shown only to you, on your orders and in the email we send after payment."
+      },
+      {
+        "heading": "Cookies",
+        "body": "We use one essential cookie to keep you signed in. Before you sign in, your cart is kept in your browser's local storage."
+      },
+      {
+        "heading": "Your choices",
+        "body": "You can change your name, email and password under Account. Deleting your account removes your profile, sign-in connections, cart and reviews; records of paid orders are kept as long as the law requires."
+      }
+    ]
+  }
+]

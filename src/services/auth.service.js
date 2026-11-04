@@ -95,6 +95,7 @@ export function createAuthService({
   userIdentityRepository,
   cartRepository,
   reviewRepository,
+  postCommentRepository,
   accessTokens,
   mailer,
   logger,
@@ -750,6 +751,8 @@ export function createAuthService({
       await cartRepository.deleteCart(user._id)
       // Reviews go with the account; product ratings are recomputed.
       await reviewRepository.deleteAllUserReviews(user._id)
+      // So do blog comments; a comment others replied to stays as "deleted".
+      await postCommentRepository.deleteAllUserComments(user._id)
       await userRepository.deleteUserById(user._id)
     },
   }

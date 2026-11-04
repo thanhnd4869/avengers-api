@@ -9,6 +9,8 @@ export const MEDIA_TYPES = Object.freeze(['screenshot', 'video'])
 const mediaSchema = new mongoose.Schema(
   {
     type: { type: String, enum: MEDIA_TYPES, required: true },
+    // Shown above a video on the gallery page; screenshots go without.
+    title: { type: String, default: '', trim: true },
     image: { type: imageSchema, required: true },
     url: { type: String, required: true },
     sortOrder: { type: Number, default: 0 },

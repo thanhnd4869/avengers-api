@@ -125,5 +125,6 @@ export function createAuthRateLimits({ isProduction, createStore }) {
     // Each attempt opens a transaction at the gateway.
     payment: limiter('payment', 15 * MINUTE, 10 * scale),
     review: limiter('review', 60 * MINUTE, 20 * scale),
+    comment: limiter('comment', 15 * MINUTE, 20 * scale),
   }
 }

@@ -4,5 +4,5 @@ export function findPublishedMedia({ type, limit }) {
   return Media.find({ published: true, ...(type ? { type } : {}) })
     .sort({ sortOrder: 1, _id: 1 })
     .limit(limit)
-    .select('type image url')
+    .select('type title image url')
 }

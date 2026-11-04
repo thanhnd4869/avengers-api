@@ -12,13 +12,16 @@ import { createAdminContactMessageController } from '#controllers/admin-contact-
 import { createAuthController } from '#controllers/auth.controller.js'
 import { createContactMessageController } from '#controllers/contact-message.controller.js'
 import { createHealthController } from '#controllers/health.controller.js'
+import { createGalleryController } from '#controllers/gallery.controller.js'
 import { createHomeController } from '#controllers/home.controller.js'
 import { createMediaController } from '#controllers/media.controller.js'
 import { createOrderController } from '#controllers/order.controller.js'
 import { createPaymentController } from '#controllers/payment.controller.js'
 import { createOAuthController } from '#controllers/oauth.controller.js'
+import { createPageController } from '#controllers/page.controller.js'
 import { createPlatformController } from '#controllers/platform.controller.js'
 import { createPostCategoryController } from '#controllers/post-category.controller.js'
+import { createPostCommentController } from '#controllers/post-comment.controller.js'
 import { createPostController } from '#controllers/post.controller.js'
 import { createProductController } from '#controllers/product.controller.js'
 import { createReviewController } from '#controllers/review.controller.js'
@@ -32,10 +35,13 @@ import {
   createRedisPing,
   pingDatabase,
 } from '#repositories/health.repository.js'
+import * as galleryRepository from '#repositories/gallery.repository.js'
 import * as mediaRepository from '#repositories/media.repository.js'
 import * as orderRepository from '#repositories/order.repository.js'
+import * as pageRepository from '#repositories/page.repository.js'
 import * as platformRepository from '#repositories/platform.repository.js'
 import * as postCategoryRepository from '#repositories/post-category.repository.js'
+import * as postCommentRepository from '#repositories/post-comment.repository.js'
 import * as postRepository from '#repositories/post.repository.js'
 import * as productRepository from '#repositories/product.repository.js'
 import * as reviewRepository from '#repositories/review.repository.js'
@@ -52,15 +58,18 @@ import { createAuthService } from '#services/auth.service.js'
 import { createBannerService } from '#services/banner.service.js'
 import { createCartService } from '#services/cart.service.js'
 import { createContactMessageService } from '#services/contact-message.service.js'
+import { createGalleryService } from '#services/gallery.service.js'
 import { createHealthService } from '#services/health.service.js'
 import { createHomeService } from '#services/home.service.js'
 import { createMediaService } from '#services/media.service.js'
 import { createOAuthService } from '#services/oauth.service.js'
 import { startOrderSweeper } from '#services/order-sweeper.js'
 import { createOrderService } from '#services/order.service.js'
+import { createPageService } from '#services/page.service.js'
 import { createPaymentService } from '#services/payment.service.js'
 import { createPlatformService } from '#services/platform.service.js'
 import { createPostCategoryService } from '#services/post-category.service.js'
+import { createPostCommentService } from '#services/post-comment.service.js'
 import { createPostService } from '#services/post.service.js'
 import { createProductService } from '#services/product.service.js'
 import { createReviewService } from '#services/review.service.js'
@@ -181,11 +190,24 @@ if (!environment.vnpay) {
 const postController = createPostController({
   postService: createPostService({ postRepository }),
 })
+const postCommentController = createPostCommentController({
+  postCommentService: createPostCommentService({
+    postCommentRepository,
+    postRepository,
+    userRepository,
+  }),
+})
+const pageController = createPageController({
+  pageService: createPageService({ pageRepository }),
+})
 const postCategoryController = createPostCategoryController({
   postCategoryService: createPostCategoryService({ postCategoryRepository }),
 })
 const mediaController = createMediaController({
   mediaService: createMediaService({ mediaRepository }),
+})
+const galleryController = createGalleryController({
+  galleryService: createGalleryService({ galleryRepository }),
 })
 const socialLinkController = createSocialLinkController({
   socialLinkService: createSocialLinkService({ socialLinkRepository }),
@@ -203,6 +225,7 @@ const authService = createAuthService({
   userIdentityRepository,
   cartRepository,
   reviewRepository,
+  postCommentRepository,
   accessTokens: createAccessTokenSigner({
     secret: environment.jwtSecret,
     ttlMinutes: environment.accessTokenTtlMinutes,
@@ -259,8 +282,11 @@ const app = createApp({
     orderController,
     paymentController,
     postController,
+    postCommentController,
+    pageController,
     postCategoryController,
     mediaController,
+    galleryController,
     socialLinkController,
     contactMessageController,
     authController,

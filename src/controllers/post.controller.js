@@ -7,5 +7,11 @@ export function createPostController({ postService }) {
         .status(HTTP_STATUS.OK)
         .json(await postService.listPosts(request.query))
     },
+
+    async getPost(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(await postService.getPost(request.params.slug))
+    },
   }
 }

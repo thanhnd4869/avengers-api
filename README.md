@@ -184,6 +184,43 @@ checks poll a fixed path and must never be throttled into a false negative.
 | `GET`  | `/api/v1/products/:slug/reviews` | `?page&limit`; newest first                                                           |
 | `GET`  | `/api/v1/product-categories`     | Genres such as Action Games or FPS                                                    |
 
+### Content
+
+| Method | Path                  | Description                                                            |
+| ------ | --------------------- | ---------------------------------------------------------------------- |
+| `GET`  | `/api/v1/posts`       | `?page&limit&category&q`; newest first                                 |
+| `GET`  | `/api/v1/posts/:slug` | One post with its `content` and up to 2 `related` posts; `404` if none |
+| `GET`  | `/api/v1/pages/:slug` | `faq`, `refund-policy`, `terms` or `privacy`: title, summary, sections |
+| `GET`  | `/api/v1/media`       | `?type=screenshot\|video&limit` (max 50); videos carry a `title`       |
+| `GET`  | `/api/v1/galleries`   | `?limit` (default 6, max 24); albums with a `cover` and their `images` |
+
+Post bodies and page sections are plain text: blocks are separated by a blank
+line, and a block starting with `### ` is a subheading. Pages live in the
+`pages` collection so they can change without a release; their first content
+comes from `scripts/pages-data.json`, which the migration inserts only where a
+page does not exist yet.
+
+### Comments
+
+| Method   | Path                               | Auth     | Description                                                |
+| -------- | ---------------------------------- | -------- | ---------------------------------------------------------- |
+| `GET`    | `/api/v1/posts/:slug/comments`     | optional | `?page&limit` (default 20, max 50); threads oldest first   |
+| `POST`   | `/api/v1/posts/:slug/comments`     | token    | `{ body: 2-2000 chars, parentId? }`; published at once     |
+| `PATCH`  | `/api/v1/posts/:slug/comments/:id` | token    | `{ body }`; the author's own comment only, marked `edited` |
+| `DELETE` | `/api/v1/posts/:slug/comments/:id` | token    | The author's own comment only                              |
+
+Signed-in readers comment on blog posts. Threads are one level deep: a reply to
+a reply joins the thread of the first comment. The listing pages through threads
+(`meta.total`), each with all its `replies`; `meta.commentCount` counts every
+comment. Listed comments carry `mine` for a signed-in reader.
+
+A first comment that still has replies is kept as `deleted` (no author, no text)
+when its author deletes it, and removed once its last reply goes. Replying to a
+deleted comment is `404`. Every write recomputes the post's `commentCount` in
+the same transaction, so a reply racing the deletion of the comment it answers
+either fails or keeps the thread, and the count stays right. Deleting an account
+deletes its comments the same way.
+
 ### Reviews
 
 | Method   | Path                                  | Auth  | Description                                                  |
