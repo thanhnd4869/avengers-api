@@ -259,11 +259,13 @@ Guests keep their cart in the browser and the API prices it with `preview`. A
 cart stores only variant ids and quantities: names, prices and stock are read
 from the catalogue on every response, so totals are never stale. Each line
 reports `status` `ok`, `limited` (more than is left) or `sold_out`, and
-`maxQuantity` (at most 10, and never more than the stock). Only `ok` lines count
-towards `summary.subtotal`; `summary.canCheckout` is `false` until every line is
-`ok`. Games that left the catalogue are dropped and listed once in `removed`.
-Writes are guarded by a revision number, so two tabs changing the cart at the
-same time cannot lose each other's change.
+`maxQuantity` (at most 5 keys of a variant per order, and never more than the
+stock). A cart holds at most 20 lines. A stored cart saved under a higher cap is
+lowered to it when read, and that response carries `adjusted: true`. Only `ok`
+lines count towards `summary.subtotal`; `summary.canCheckout` is `false` until
+every line is `ok`. Games that left the catalogue are dropped and listed once in
+`removed`. Writes are guarded by a revision number, so two tabs changing the
+cart at the same time cannot lose each other's change.
 
 ### Orders
 

@@ -25,6 +25,13 @@ function variantNotFound() {
   return new NotFoundError('This game is no longer sold.')
 }
 
+/** Why no more of a variant fits: the per-order cap, or the stock left. */
+function limitMessage(maxQuantity) {
+  return maxQuantity >= CART_MAX_QUANTITY
+    ? `You can buy up to ${CART_MAX_QUANTITY} keys of this game per order.`
+    : `Only ${maxQuantity} ${maxQuantity === 1 ? 'key is' : 'keys are'} left for this game.`
+}
+
 /**
  * Turns stored lines into what the cart shows: the catalogue's current name,
  * price and stock for each one. Lines whose variant can no longer be bought
@@ -121,19 +128,33 @@ export function createCartService({ cartRepository }) {
 
   async function readCart(userId) {
     const { items } = await cartRepository.findCart(userId)
-    const priced = priceItems(items, await variantsFor(items))
+    // Carts saved under an earlier, higher per-order cap are brought down
+    // to the current one, once, and the shopper is told (`adjusted`).
+    const capped = items.map((item) =>
+      item.quantity > CART_MAX_QUANTITY
+        ? { ...item, quantity: CART_MAX_QUANTITY }
+        : item,
+    )
+    const adjusted = capped.some((item, index) => item !== items[index])
+    const priced = priceItems(capped, await variantsFor(capped))
 
     // Lines for games that left the catalogue are dropped for good, so the
     // shopper is told once rather than on every visit.
-    if (priced.removed.length) {
+    if (priced.removed.length || adjusted) {
       const removed = new Set(priced.removed)
 
       await updateCart(userId, (current) =>
-        current.filter((item) => !removed.has(String(item.variantId))),
+        current
+          .filter((item) => !removed.has(String(item.variantId)))
+          .map((item) =>
+            item.quantity > CART_MAX_QUANTITY
+              ? { ...item, quantity: CART_MAX_QUANTITY }
+              : item,
+          ),
       )
     }
 
-    return priced
+    return adjusted ? { ...priced, adjusted } : priced
   }
 
   return {
@@ -171,10 +192,9 @@ export function createCartService({ cartRepository }) {
         }
 
         if (existing && existing.quantity >= maxQuantity) {
-          throw new ConflictError(
-            `You already have the most you can buy (${maxQuantity}) in your cart.`,
-            { code: ERROR_CODE.CART_LIMIT },
-          )
+          throw new ConflictError(limitMessage(maxQuantity), {
+            code: ERROR_CODE.CART_LIMIT,
+          })
         }
 
         // Adding more than is left fills the line up to the limit instead
@@ -224,7 +244,7 @@ export function createCartService({ cartRepository }) {
           throw new ConflictError(
             maxQuantity === 0
               ? 'This game is sold out on this platform.'
-              : `Only ${maxQuantity} can be bought.`,
+              : limitMessage(maxQuantity),
             {
               code:
                 maxQuantity === 0

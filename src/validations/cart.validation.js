@@ -1,7 +1,9 @@
 import { fieldError } from './query.validation.js'
 
-export const CART_MAX_QUANTITY = 10
-export const CART_MAX_LINES = 50
+// Keys of one variant per order: enough to buy a few as gifts, few enough
+// that one shopper cannot empty the stock to resell it.
+export const CART_MAX_QUANTITY = 5
+export const CART_MAX_LINES = 20
 
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i
 
