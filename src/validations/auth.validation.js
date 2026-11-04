@@ -1,6 +1,6 @@
 import { fieldError } from './query.validation.js'
 
-// Mirrors avengers-ui `utils/validation.js`, so both sides agree on what a
+// Mirrors avengers-shop `utils/validation.js`, so both sides agree on what a
 // valid form is and the API message can be shown next to the right field.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const EMAIL_MAX_LENGTH = 254

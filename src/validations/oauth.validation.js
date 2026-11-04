@@ -15,7 +15,7 @@ export function parseProvider(value) {
 
 /**
  * A path on the shop only, so a crafted link cannot bounce the visitor to
- * another site after signing in. Mirrors `safeRedirect` in avengers-ui.
+ * another site after signing in. Mirrors `safeRedirect` in avengers-shop.
  */
 export function parseRedirect(value, fallback) {
   return typeof value === 'string' &&
