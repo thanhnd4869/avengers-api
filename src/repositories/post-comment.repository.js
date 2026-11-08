@@ -116,14 +116,28 @@ export function updateUserComment({ commentId, postId, userId, body }) {
  * with replies stays as a deleted placeholder so the thread reads on.
  */
 export function deleteUserComment({ commentId, postId, userId }) {
+  return removeComment({ _id: commentId, postId, userId, deleted: false })
+}
+
+/**
+ * Removes any comment, as a moderator does, the same way its author would.
+ * Answers the removed comment's post id, or `null` when there is none.
+ */
+export function deleteCommentById(commentId) {
+  return removeComment({ _id: commentId, deleted: false }, { answerPost: true })
+}
+
+function removeComment(filter, { answerPost = false } = {}) {
   return inTransaction(async (session) => {
     const comment = await PostComment.findOne(
-      { _id: commentId, postId, userId, deleted: false },
-      { parentId: 1 },
+      filter,
+      { parentId: 1, postId: 1 },
       { session },
     ).lean()
 
-    if (!comment) return false
+    if (!comment) return answerPost ? null : false
+
+    const { postId } = comment
 
     const hasReplies =
       !comment.parentId &&
@@ -142,7 +156,7 @@ export function deleteUserComment({ commentId, postId, userId }) {
 
     await recomputeCommentCount(postId, session)
 
-    return true
+    return answerPost ? postId : true
   })
 }
 

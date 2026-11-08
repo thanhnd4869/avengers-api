@@ -46,6 +46,16 @@ export const ERROR_CODE = Object.freeze({
   REVIEW_NOT_ALLOWED: 'REVIEW_NOT_ALLOWED',
   // The shopper already reviewed this game; they may edit that review.
   REVIEW_EXISTS: 'REVIEW_EXISTS',
+  // Another product already uses this slug.
+  SLUG_TAKEN: 'SLUG_TAKEN',
+  // The product is already sold on this platform in this edition.
+  VARIANT_EXISTS: 'VARIANT_EXISTS',
+  // A variant that ever had a key stays, so its orders keep their history.
+  VARIANT_HAS_KEYS: 'VARIANT_HAS_KEYS',
+  // Some of the submitted codes are already in stock.
+  DUPLICATE_KEYS: 'DUPLICATE_KEYS',
+  // The payment is not owed back, or was already refunded.
+  REFUND_NOT_OWED: 'REFUND_NOT_OWED',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',

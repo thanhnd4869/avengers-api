@@ -354,6 +354,44 @@ HMAC fingerprint that stops the same code being stocked twice. In development,
 | `GET`    | `/api/v1/admin/contact-messages`     | admin  | `?page&limit&status=new\|read\|replied`                     |
 | `PATCH`  | `/api/v1/admin/contact-messages/:id` | admin  | `{ status }`                                                |
 
+### Administration
+
+| Method   | Path                                                  | Description                                                                            |
+| -------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/admin/overview`                              | `?days=7\|30\|90`; order, revenue, user, stock and inbox figures                       |
+| `GET`    | `/api/v1/admin/orders`                                | `?page&limit&status&q`; `q` matches the number or customer                             |
+| `GET`    | `/api/v1/admin/orders/:number`                        | One order with its lines and payments; never the key codes                             |
+| `GET`    | `/api/v1/admin/payments`                              | `?page&limit&status`; `status=refund_required` lists owed refunds                      |
+| `POST`   | `/api/v1/admin/payments/:id/refund`                   | `{ note? }`; records that an owed refund was paid back by hand                         |
+| `GET`    | `/api/v1/admin/users`                                 | `?page&limit&role&q`; each with order count and amount paid                            |
+| `GET`    | `/api/v1/admin/users/:id`                             | One account with its latest orders                                                     |
+| `GET`    | `/api/v1/admin/platforms`                             | Every platform, hidden ones included                                                   |
+| `GET`    | `/api/v1/admin/product-categories`                    | Every product category                                                                 |
+| `GET`    | `/api/v1/admin/products`                              | `?page&limit&q&published=true\|false`; variants with stock levels                      |
+| `POST`   | `/api/v1/admin/products`                              | `{ name, slug, imageUrl, releaseDate, ... }`; starts hidden                            |
+| `GET`    | `/api/v1/admin/products/:id`                          | One product with its variants and key counts                                           |
+| `PATCH`  | `/api/v1/admin/products/:id`                          | Any product field, or `{ published }` to show or hide it                               |
+| `POST`   | `/api/v1/admin/products/:id/variants`                 | `{ platformId, edition, price, originalPrice? }`                                       |
+| `PATCH`  | `/api/v1/admin/products/:id/variants/:variantId`      | Any variant field                                                                      |
+| `DELETE` | `/api/v1/admin/products/:id/variants/:variantId`      | Only while the variant never had a key (`409` otherwise)                               |
+| `POST`   | `/api/v1/admin/products/:id/variants/:variantId/keys` | `{ codes }`, one per line; encrypted, never echoed back                                |
+| `GET`    | `/api/v1/admin/banners`                               | Every home banner, in display order                                                    |
+| `POST`   | `/api/v1/admin/banners`                               | `{ title, excerpt, imageUrl, linkUrl?, linkLabel?, sortOrder? }`                       |
+| `PATCH`  | `/api/v1/admin/banners/:id`                           | Any banner field, or `{ published }`                                                   |
+| `DELETE` | `/api/v1/admin/banners/:id`                           | Removes the banner                                                                     |
+| `GET`    | `/api/v1/admin/post-categories`                       | Every blog category                                                                    |
+| `GET`    | `/api/v1/admin/posts`                                 | `?page&limit&q&published&categoryId`; without the body text                            |
+| `POST`   | `/api/v1/admin/posts`                                 | `{ title, slug, excerpt, content?, imageUrl, categoryId, publishedAt }`; starts hidden |
+| `GET`    | `/api/v1/admin/posts/:id`                             | One post with its body text                                                            |
+| `PATCH`  | `/api/v1/admin/posts/:id`                             | Any post field, or `{ published }`                                                     |
+| `DELETE` | `/api/v1/admin/posts/:id`                             | Removes the post and all its comments                                                  |
+| `GET`    | `/api/v1/admin/comments`                              | `?page&limit&q&postId`; newest first across every post                                 |
+| `DELETE` | `/api/v1/admin/comments/:id`                          | Takes a comment down, as if its author had deleted it                                  |
+
+All of them require an admin with a verified email, like every `/admin` route.
+Responses are built field by field, so password hashes and key codes never leave
+the API through them.
+
 Sign-in, sign-up and refresh answer `{ data: { user, accessToken } }`. The
 access token (JWT, HS256, ~15 minutes) is sent as `Authorization: Bearer` and
 should be kept in memory only. The refresh token is a random value in an

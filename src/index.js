@@ -8,6 +8,9 @@ import {
 } from '#config/redis.js'
 import { createBannerController } from '#controllers/banner.controller.js'
 import { createCartController } from '#controllers/cart.controller.js'
+import { createAdminController } from '#controllers/admin.controller.js'
+import { createAdminCatalogueController } from '#controllers/admin-catalogue.controller.js'
+import { createAdminContentController } from '#controllers/admin-content.controller.js'
 import { createAdminContactMessageController } from '#controllers/admin-contact-message.controller.js'
 import { createAuthController } from '#controllers/auth.controller.js'
 import { createContactMessageController } from '#controllers/contact-message.controller.js'
@@ -28,6 +31,9 @@ import { createReviewController } from '#controllers/review.controller.js'
 import { createSocialLinkController } from '#controllers/social-link.controller.js'
 import { createAuthMiddlewares } from '#middlewares/auth.middleware.js'
 import { createAuthRateLimits } from '#middlewares/infrastructure.middleware.js'
+import * as adminRepository from '#repositories/admin.repository.js'
+import * as adminCatalogueRepository from '#repositories/admin-catalogue.repository.js'
+import * as adminContentRepository from '#repositories/admin-content.repository.js'
 import * as bannerRepository from '#repositories/banner.repository.js'
 import * as cartRepository from '#repositories/cart.repository.js'
 import * as contactMessageRepository from '#repositories/contact-message.repository.js'
@@ -53,6 +59,9 @@ import { createUserTokenRepository } from '#repositories/user-token.repository.j
 import * as userRepository from '#repositories/user.repository.js'
 import { createHealthRouter } from '#routes/health.routes.js'
 import { createRouter } from '#routes/index.js'
+import { createAdminService } from '#services/admin.service.js'
+import { createAdminCatalogueService } from '#services/admin-catalogue.service.js'
+import { createAdminContentService } from '#services/admin-content.service.js'
 import { createAdminContactMessageService } from '#services/admin-contact-message.service.js'
 import { createAuthService } from '#services/auth.service.js'
 import { createBannerService } from '#services/banner.service.js'
@@ -265,6 +274,22 @@ if (Object.keys(oauthProviders).length === 0) {
 const auth = createAuthMiddlewares({
   resolveAccessToken: authService.authenticateAccessToken,
 })
+const adminController = createAdminController({
+  adminService: createAdminService({ adminRepository }),
+})
+const adminCatalogueController = createAdminCatalogueController({
+  adminCatalogueService: createAdminCatalogueService({
+    adminCatalogueRepository,
+    keyCipher,
+    logger,
+  }),
+})
+const adminContentController = createAdminContentController({
+  adminContentService: createAdminContentService({
+    adminContentRepository,
+    logger,
+  }),
+})
 const adminContactMessageController = createAdminContactMessageController({
   adminContactMessageService: createAdminContactMessageService({
     contactMessageRepository,
@@ -291,6 +316,9 @@ const app = createApp({
     contactMessageController,
     authController,
     oauthController,
+    adminController,
+    adminCatalogueController,
+    adminContentController,
     adminContactMessageController,
     auth,
     authRateLimits: createAuthRateLimits({

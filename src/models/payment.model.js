@@ -40,6 +40,15 @@ const paymentSchema = new mongoose.Schema(
     settledAt: { type: Date, default: null },
     // Why a refund is owed, when `status` is `refund_required`.
     refundReason: { type: String, default: null },
+    // Set by an admin once the money was paid back by hand. The status stays
+    // `refund_required`, so the record still says why the money was owed.
+    refundedAt: { type: Date, default: null },
+    refundedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    refundNote: { type: String, default: null },
   },
   { timestamps: true, collection: 'payments' },
 )

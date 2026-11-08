@@ -41,6 +41,9 @@ export function createRouter({
   contactMessageController,
   authController,
   oauthController,
+  adminController,
+  adminCatalogueController,
+  adminContentController,
   adminContactMessageController,
   auth,
   authRateLimits,
@@ -58,7 +61,13 @@ export function createRouter({
   )
   router.use(
     '/admin',
-    createAdminRouter({ auth, adminContactMessageController }),
+    createAdminRouter({
+      auth,
+      adminController,
+      adminCatalogueController,
+      adminContentController,
+      adminContactMessageController,
+    }),
   )
 
   router.use('/banners', createBannerRouter({ bannerController }))

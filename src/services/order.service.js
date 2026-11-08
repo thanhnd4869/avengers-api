@@ -304,7 +304,9 @@ export function createOrderService({
           // Shows a shopper who paid twice, or paid too late, that a refund
           // is on its way.
           refundPending: payments.some(
-            (payment) => payment.status === PAYMENT_STATUS.REFUND_REQUIRED,
+            (payment) =>
+              payment.status === PAYMENT_STATUS.REFUND_REQUIRED &&
+              !payment.refundedAt,
           ),
         },
       }
