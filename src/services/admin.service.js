@@ -1,6 +1,15 @@
 import { ERROR_CODE } from '#constants/error-code.js'
-import { ORDER_STATUS, PAYMENT_STATUS } from '#constants/order.js'
-import { ConflictError, NotFoundError } from '#errors/app-error.js'
+import {
+  ORDER_STATUS,
+  PAYMENT_PROVIDER,
+  PAYMENT_REFUND_STATUS,
+  PAYMENT_STATUS,
+} from '#constants/order.js'
+import {
+  ConflictError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from '#errors/app-error.js'
 import {
   parseAdminOrderNumber,
   validateAdminOrderListQuery,
@@ -79,6 +88,27 @@ function toAdminPayment(payment, { order, customer } = {}) {
     bankCode: payment.bankCode,
     responseCode: payment.responseCode,
     refundReason: payment.refundReason,
+    refundStatus:
+      payment.refundStatus ??
+      (payment.refundedAt
+        ? PAYMENT_REFUND_STATUS.SUCCEEDED
+        : PAYMENT_REFUND_STATUS.NONE),
+    refundMethod: payment.refundMethod ?? null,
+    refundAttemptedAt: payment.refundAttemptedAt ?? null,
+    refundResponseCode: payment.refundResponseCode ?? null,
+    refundProviderTransactionNo: payment.refundProviderTransactionNo ?? null,
+    refundError: payment.refundError ?? null,
+    refundAttempts: (payment.refundAttempts ?? []).map((attempt) => ({
+      requestId: attempt.requestId ?? null,
+      method: attempt.method,
+      status: attempt.status,
+      attemptedAt: attempt.attemptedAt,
+      responseCode: attempt.responseCode ?? null,
+      providerTransactionNo: attempt.providerTransactionNo ?? null,
+      error: attempt.error ?? null,
+      adminId: attempt.adminId ? String(attempt.adminId) : null,
+      note: attempt.note ?? null,
+    })),
     refundedAt: payment.refundedAt ?? null,
     refundNote: payment.refundNote ?? null,
     createdAt: payment.createdAt,
@@ -106,7 +136,7 @@ function toAdminUser(user, summary) {
   }
 }
 
-export function createAdminService({ adminRepository }) {
+export function createAdminService({ adminRepository, vnpay, logger }) {
   async function customersFor(records) {
     const ids = [...new Set(records.map((record) => String(record.userId)))]
     const users = ids.length ? await adminRepository.findUsersByIds(ids) : []
@@ -261,15 +291,199 @@ export function createAdminService({ adminRepository }) {
 
         if (!existing) throw new NotFoundError('Payment not found.')
 
+        const message =
+          existing.refundStatus === PAYMENT_REFUND_STATUS.PROCESSING
+            ? 'A refund request is already being processed.'
+            : existing.refundStatus === PAYMENT_REFUND_STATUS.UNKNOWN
+              ? 'The prior refund result is unknown; reconcile it before recording a manual refund.'
+              : existing.refundedAt
+                ? 'This refund was already recorded.'
+                : 'This payment is not owed back.'
+
+        throw new ConflictError(message, { code: ERROR_CODE.REFUND_NOT_OWED })
+      }
+
+      return { data: toAdminPayment(payment) }
+    },
+
+    /**
+     * Sends one full-refund request to VNPay. A timeout is recorded as
+     * `unknown`, since the provider may have processed a request whose reply
+     * did not reach us; it must be reconciled before another attempt.
+     */
+    async refundPaymentViaVnpay(rawId, body, { adminId, ipAddr }) {
+      if (!vnpay) {
+        throw new ServiceUnavailableError('VNPay is not configured.')
+      }
+
+      const id = validateObjectId(rawId)
+      const { note } = validateRefundBody(body)
+      const existing = await adminRepository.findPaymentById(id)
+
+      if (!existing) throw new NotFoundError('Payment not found.')
+      if (existing.provider !== PAYMENT_PROVIDER.VNPAY) {
         throw new ConflictError(
-          existing.status === PAYMENT_STATUS.REFUND_REQUIRED
-            ? 'This refund was already recorded.'
-            : 'This payment is not owed back.',
+          'Only VNPay payments can be refunded through VNPay.',
+          {
+            code: ERROR_CODE.REFUND_NOT_OWED,
+          },
+        )
+      }
+      if (
+        existing.status !== PAYMENT_STATUS.REFUND_REQUIRED ||
+        existing.refundedAt
+      ) {
+        throw new ConflictError('This payment is not owed back.', {
+          code: ERROR_CODE.REFUND_NOT_OWED,
+        })
+      }
+      if (
+        existing.refundStatus === PAYMENT_REFUND_STATUS.PROCESSING ||
+        existing.refundStatus === PAYMENT_REFUND_STATUS.UNKNOWN
+      ) {
+        throw new ConflictError(
+          'A previous refund attempt is still being processed or has an unknown result. Reconcile it with VNPay before retrying.',
+          { code: ERROR_CODE.REFUND_RESULT_UNKNOWN },
+        )
+      }
+      if (!existing.providerTransactionNo || !existing.createdAt) {
+        throw new ConflictError(
+          'VNPay transaction details are missing; this refund must be reconciled manually.',
           { code: ERROR_CODE.REFUND_NOT_OWED },
         )
       }
 
-      return { data: toAdminPayment(payment) }
+      const requestId = vnpay.createRefundRequestId()
+      const payment = await adminRepository.beginVnpayRefund({
+        paymentId: id,
+        adminId,
+        requestId,
+        note,
+        at: new Date(),
+      })
+
+      if (!payment) {
+        throw new ConflictError(
+          'This refund is already being handled or is no longer owed.',
+          { code: ERROR_CODE.REFUND_NOT_OWED },
+        )
+      }
+
+      let reply
+
+      try {
+        reply = await vnpay.refundTransaction({
+          requestId,
+          txnRef: payment.txnRef,
+          amount: payment.amount,
+          transactionNo: payment.providerTransactionNo,
+          // VNPay matches this against the `vnp_CreateDate` of the pay request.
+          transactionDate: payment.createdAt,
+          orderInfo: `Refund payment ${payment.txnRef}`,
+          createdBy: String(adminId),
+          ipAddr,
+        })
+      } catch (error) {
+        logger.error(
+          { err: error, paymentId: id, txnRef: payment.txnRef, requestId },
+          'VNPay refund result is unknown',
+        )
+
+        try {
+          await adminRepository.markVnpayRefundUnknown({
+            paymentId: id,
+            requestId,
+            error:
+              'Could not verify the VNPay refund response; reconcile before retrying.',
+          })
+        } catch (recordError) {
+          logger.error(
+            { err: recordError, paymentId: id, txnRef: payment.txnRef },
+            'Could not record the unknown VNPay refund result',
+          )
+        }
+
+        throw new ServiceUnavailableError(
+          'Could not confirm the refund result with VNPay. Do not retry until the transaction has been reconciled.',
+          { code: ERROR_CODE.REFUND_RESULT_UNKNOWN },
+        )
+      }
+
+      if (reply.vnp_ResponseCode !== '00') {
+        const providerMessage = String(reply.vnp_Message || 'Request rejected')
+          .replace(/[<>]/g, '')
+          .slice(0, 200)
+
+        const failed = await adminRepository.failVnpayRefund({
+          paymentId: id,
+          requestId,
+          responseCode: reply.vnp_ResponseCode,
+          error: providerMessage,
+        })
+
+        if (!failed) {
+          logger.error(
+            { paymentId: id, txnRef: payment.txnRef, requestId },
+            'VNPay rejected refund but the result could not be recorded',
+          )
+          throw new ServiceUnavailableError(
+            'VNPay rejected the refund, but the result could not be recorded. Reconcile before retrying.',
+            { code: ERROR_CODE.REFUND_RESULT_UNKNOWN },
+          )
+        }
+
+        throw new ConflictError(
+          `VNPay did not accept the refund: ${providerMessage}`,
+          {
+            code: ERROR_CODE.REFUND_REJECTED,
+          },
+        )
+      }
+
+      let refunded
+
+      try {
+        refunded = await adminRepository.finishVnpayRefund({
+          paymentId: id,
+          requestId,
+          responseCode: reply.vnp_ResponseCode,
+          refundTransactionNo: reply.vnp_TransactionNo,
+          at: new Date(),
+        })
+      } catch (error) {
+        logger.error(
+          { err: error, paymentId: id, txnRef: payment.txnRef, requestId },
+          'VNPay accepted refund but local payment state could not be updated',
+        )
+        throw new ServiceUnavailableError(
+          'VNPay accepted the refund, but the result could not be recorded. Reconcile before retrying.',
+          { code: ERROR_CODE.REFUND_RESULT_UNKNOWN },
+        )
+      }
+
+      if (!refunded) {
+        logger.error(
+          { paymentId: id, txnRef: payment.txnRef, requestId },
+          'VNPay accepted refund but local payment state could not be updated',
+        )
+        throw new ServiceUnavailableError(
+          'VNPay accepted the refund, but the result could not be recorded. Reconcile before retrying.',
+          { code: ERROR_CODE.REFUND_RESULT_UNKNOWN },
+        )
+      }
+
+      logger.info(
+        {
+          paymentId: id,
+          txnRef: payment.txnRef,
+          requestId,
+          refundTransactionNo: reply.vnp_TransactionNo,
+          adminId,
+        },
+        'VNPay refund completed',
+      )
+
+      return { data: toAdminPayment(refunded) }
     },
   }
 }

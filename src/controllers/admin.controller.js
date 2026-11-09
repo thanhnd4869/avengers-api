@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from '#constants/http-status.js'
+import { clientIp } from '#utils/client-ip.js'
 
 export function createAdminController({ adminService }) {
   return {
@@ -48,6 +49,19 @@ export function createAdminController({ adminService }) {
             { adminId: request.auth.userId },
           ),
         )
+    },
+
+    async refundPaymentViaVnpay(request, response) {
+      response.status(HTTP_STATUS.OK).json(
+        await adminService.refundPaymentViaVnpay(
+          request.params.id,
+          request.body,
+          {
+            adminId: request.auth.userId,
+            ipAddr: clientIp(request),
+          },
+        ),
+      )
     },
   }
 }

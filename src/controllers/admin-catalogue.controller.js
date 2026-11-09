@@ -84,10 +84,54 @@ export function createAdminCatalogueController({ adminCatalogueService }) {
         .json(await adminCatalogueService.listPlatforms())
     },
 
+    async createPlatform(request, response) {
+      response
+        .status(HTTP_STATUS.CREATED)
+        .json(await adminCatalogueService.createPlatform(request.body))
+    },
+
+    async updatePlatform(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(
+          await adminCatalogueService.updatePlatform(
+            request.params.id,
+            request.body,
+          ),
+        )
+    },
+
+    async deletePlatform(request, response) {
+      await adminCatalogueService.deletePlatform(request.params.id)
+      response.status(HTTP_STATUS.NO_CONTENT).end()
+    },
+
     async listCategories(_request, response) {
       response
         .status(HTTP_STATUS.OK)
         .json(await adminCatalogueService.listCategories())
+    },
+
+    async createCategory(request, response) {
+      response
+        .status(HTTP_STATUS.CREATED)
+        .json(await adminCatalogueService.createCategory(request.body))
+    },
+
+    async updateCategory(request, response) {
+      response
+        .status(HTTP_STATUS.OK)
+        .json(
+          await adminCatalogueService.updateCategory(
+            request.params.id,
+            request.body,
+          ),
+        )
+    },
+
+    async deleteCategory(request, response) {
+      await adminCatalogueService.deleteCategory(request.params.id)
+      response.status(HTTP_STATUS.NO_CONTENT).end()
     },
   }
 }

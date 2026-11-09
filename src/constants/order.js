@@ -29,4 +29,12 @@ export const PAYMENT_STATUS = Object.freeze({
   REFUND_REQUIRED: 'refund_required',
 })
 
+export const PAYMENT_REFUND_STATUS = Object.freeze({
+  NONE: 'none',
+  PROCESSING: 'processing',
+  FAILED: 'failed',
+  UNKNOWN: 'unknown',
+  SUCCEEDED: 'succeeded',
+})
+
 export const PAYMENT_PROVIDER = Object.freeze({ VNPAY: 'vnpay' })

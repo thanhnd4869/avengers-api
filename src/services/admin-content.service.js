@@ -11,6 +11,14 @@ import {
   validateBannerBody,
   validatePostBody,
 } from '#validations/admin-content.validation.js'
+import {
+  validateGalleryBody,
+  validateMediaBody,
+  validatePageBody,
+  validatePageSlug,
+  validateSocialLinkBody,
+  validateTaxonomyBody,
+} from '#validations/admin-cms.validation.js'
 import { toPaginatedResponse } from './pagination.js'
 
 function toAdminBanner(banner) {
@@ -59,6 +67,64 @@ function toAdminComment(comment, post) {
   }
 }
 
+function toAdminPage(page) {
+  return {
+    slug: page.slug,
+    title: page.title,
+    summary: page.summary,
+    sections: page.sections,
+    published: page.published,
+    updatedAt: page.updatedAt,
+  }
+}
+
+function toAdminGallery(gallery) {
+  return {
+    id: String(gallery._id),
+    slug: gallery.slug,
+    title: gallery.title,
+    cover: gallery.cover,
+    images: gallery.images,
+    sortOrder: gallery.sortOrder,
+    published: gallery.published,
+    updatedAt: gallery.updatedAt,
+  }
+}
+
+function toAdminMedia(media) {
+  return {
+    id: String(media._id),
+    type: media.type,
+    title: media.title,
+    image: media.image,
+    url: media.url,
+    sortOrder: media.sortOrder,
+    published: media.published,
+    updatedAt: media.updatedAt,
+  }
+}
+
+function toAdminSocialLink(link) {
+  return {
+    id: String(link._id),
+    network: link.network,
+    label: link.label,
+    url: link.url,
+    sortOrder: link.sortOrder,
+    published: link.published !== false,
+    updatedAt: link.updatedAt,
+  }
+}
+
+function toAdminPostCategory(category) {
+  return {
+    id: String(category._id),
+    name: category.name,
+    slug: category.slug,
+    sortOrder: category.sortOrder,
+  }
+}
+
 function slugTaken() {
   return new ConflictError('Another post already uses this slug.', {
     code: ERROR_CODE.SLUG_TAKEN,
@@ -93,6 +159,27 @@ export function createAdminContentService({
       return { data: toAdminPost(post, { withContent: true }) }
     } catch (error) {
       if (repository.isDuplicateKeyError(error)) throw slugTaken()
+      throw error
+    }
+  }
+
+  async function saveCmsItem(write, present, resourceName) {
+    try {
+      const item = await write()
+      if (!item) throw new NotFoundError(`${resourceName} not found.`)
+      return { data: present(item) }
+    } catch (error) {
+      if (repository.isDuplicateKeyError(error)) {
+        throw new ConflictError(
+          `Another ${resourceName.toLowerCase()} already uses that slug.`,
+          {
+            code: ERROR_CODE.SLUG_TAKEN,
+            details: [
+              { field: 'slug', message: 'This slug is already in use.' },
+            ],
+          },
+        )
+      }
       throw error
     }
   }
@@ -177,12 +264,207 @@ export function createAdminContentService({
     async listPostCategories() {
       const categories = await repository.findPostCategories()
 
+      return { data: categories.map(toAdminPostCategory) }
+    },
+
+    async createPostCategory(body) {
+      const input = validateTaxonomyBody(body)
+      if (input.slug === 'all') {
+        throw new ValidationError('The "all" slug is reserved.', {
+          details: [{ field: 'slug', message: 'Choose a different slug.' }],
+        })
+      }
+      try {
+        const category = await repository.createPostCategory(input)
+        return { data: toAdminPostCategory(category) }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw new ConflictError(
+            'Another blog category already uses that slug.',
+            {
+              code: ERROR_CODE.SLUG_TAKEN,
+              details: [
+                { field: 'slug', message: 'This slug is already in use.' },
+              ],
+            },
+          )
+        }
+        throw error
+      }
+    },
+
+    async updatePostCategory(rawId, body) {
+      const id = validateId(rawId)
+      const changes = validateTaxonomyBody(body, { partial: true })
+      if (changes.slug === 'all') {
+        throw new ValidationError('The "all" slug is reserved.', {
+          details: [{ field: 'slug', message: 'Choose a different slug.' }],
+        })
+      }
+      try {
+        const category = await repository.updatePostCategory(id, changes)
+        if (!category) throw new NotFoundError('Blog category not found.')
+        return { data: toAdminPostCategory(category) }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw new ConflictError(
+            'Another blog category already uses that slug.',
+            {
+              code: ERROR_CODE.SLUG_TAKEN,
+              details: [
+                { field: 'slug', message: 'This slug is already in use.' },
+              ],
+            },
+          )
+        }
+        throw error
+      }
+    },
+
+    async deletePostCategory(rawId) {
+      const id = validateId(rawId)
+      if (!(await repository.findPostCategoryById(id))) {
+        throw new NotFoundError('Blog category not found.')
+      }
+      if (await repository.countPostsForCategory(id)) {
+        throw new ConflictError(
+          'This category is used by blog posts. Move those posts before deleting it.',
+        )
+      }
+      if (!(await repository.deletePostCategory(id))) {
+        throw new NotFoundError('Blog category not found.')
+      }
+    },
+
+    async listPages() {
+      return { data: (await repository.findPages()).map(toAdminPage) }
+    },
+
+    async updatePage(rawSlug, body) {
+      const slug = validatePageSlug(rawSlug)
+      const page = await repository.updatePageBySlug(
+        slug,
+        validatePageBody(body, { partial: true }),
+      )
+      if (!page) throw new NotFoundError('Page not found.')
+      return { data: toAdminPage(page) }
+    },
+
+    async listGalleries() {
+      return { data: (await repository.findGalleries()).map(toAdminGallery) }
+    },
+
+    async createGallery(body) {
+      const input = validateGalleryBody(body)
+      return saveCmsItem(
+        () =>
+          repository.createGallery({
+            ...input,
+            published: input.published ?? false,
+          }),
+        toAdminGallery,
+        'Gallery',
+      )
+    },
+
+    async updateGallery(rawId, body) {
+      const id = validateId(rawId)
+      return saveCmsItem(
+        () =>
+          repository.updateGallery(
+            id,
+            validateGalleryBody(body, { partial: true }),
+          ),
+        toAdminGallery,
+        'Gallery',
+      )
+    },
+
+    async deleteGallery(rawId) {
+      if (!(await repository.deleteGallery(validateId(rawId)))) {
+        throw new NotFoundError('Gallery not found.')
+      }
+    },
+
+    async listMedia() {
+      return { data: (await repository.findMedia()).map(toAdminMedia) }
+    },
+
+    async createMedia(body) {
+      const input = validateMediaBody(body)
+      const media = await repository.createMedia({
+        ...input,
+        published: input.published ?? false,
+      })
+      return { data: toAdminMedia(media) }
+    },
+
+    async updateMedia(rawId, body) {
+      const id = validateId(rawId)
+      const media = await repository.updateMedia(
+        id,
+        validateMediaBody(body, { partial: true }),
+      )
+      if (!media) throw new NotFoundError('Media item not found.')
+      return { data: toAdminMedia(media) }
+    },
+
+    async deleteMedia(rawId) {
+      if (!(await repository.deleteMedia(validateId(rawId)))) {
+        throw new NotFoundError('Media item not found.')
+      }
+    },
+
+    async listSocialLinks() {
       return {
-        data: categories.map((category) => ({
-          id: String(category._id),
-          name: category.name,
-          slug: category.slug,
-        })),
+        data: (await repository.findSocialLinks()).map(toAdminSocialLink),
+      }
+    },
+
+    async createSocialLink(body) {
+      try {
+        const input = validateSocialLinkBody(body)
+        const link = await repository.createSocialLink({
+          ...input,
+          published: input.published ?? false,
+        })
+        return { data: toAdminSocialLink(link) }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw new ConflictError('That social network already has a link.', {
+            details: [
+              { field: 'network', message: 'This network is already in use.' },
+            ],
+          })
+        }
+        throw error
+      }
+    },
+
+    async updateSocialLink(rawId, body) {
+      const id = validateId(rawId)
+      try {
+        const link = await repository.updateSocialLink(
+          id,
+          validateSocialLinkBody(body, { partial: true }),
+        )
+        if (!link) throw new NotFoundError('Social link not found.')
+        return { data: toAdminSocialLink(link) }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw new ConflictError('That social network already has a link.', {
+            details: [
+              { field: 'network', message: 'This network is already in use.' },
+            ],
+          })
+        }
+        throw error
+      }
+    },
+
+    async deleteSocialLink(rawId) {
+      if (!(await repository.deleteSocialLink(validateId(rawId)))) {
+        throw new NotFoundError('Social link not found.')
       }
     },
 

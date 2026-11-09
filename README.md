@@ -316,12 +316,17 @@ Confirming a payment is one transaction: the order becomes `paid` only if it is
 not paid yet, its reserved keys become `sold`, and the payment `succeeded`. So
 duplicate IPNs, an IPN and a return at once, or two payments for one order all
 end with exactly one paid order. Money that cannot be used is recorded as
-`refund_required` (refunded by hand):
+`refund_required` and can be refunded through the admin's VNPay refund action:
 
 - a second successful payment for an order that is already paid;
 - a payment that arrives after the order's keys went back on sale, when too few
   are left to hold again. (If enough are left, they are held again and the order
   is paid as usual.)
+
+  Refunds are full-amount only. Automatic refund requires the original VNPay
+  transaction number and creation date. A signed rejection is saved as a failed
+  attempt; a timeout or untrusted response is marked unknown and must be
+  reconciled in the VNPay merchant portal before another attempt.
 
 After a payment the bought games leave the cart and, if the account has an email
 address, the keys are emailed once. VNPay must be able to reach
@@ -362,11 +367,18 @@ HMAC fingerprint that stops the same code being stocked twice. In development,
 | `GET`    | `/api/v1/admin/orders`                                | `?page&limit&status&q`; `q` matches the number or customer                             |
 | `GET`    | `/api/v1/admin/orders/:number`                        | One order with its lines and payments; never the key codes                             |
 | `GET`    | `/api/v1/admin/payments`                              | `?page&limit&status`; `status=refund_required` lists owed refunds                      |
-| `POST`   | `/api/v1/admin/payments/:id/refund`                   | `{ note? }`; records that an owed refund was paid back by hand                         |
+| `POST`   | `/api/v1/admin/payments/:id/refund/vnpay`             | `{ note? }`; asks VNPay to refund the full payment; signed result is recorded          |
+| `POST`   | `/api/v1/admin/payments/:id/refund`                   | `{ note? }`; records a refund already completed manually outside the API               |
 | `GET`    | `/api/v1/admin/users`                                 | `?page&limit&role&q`; each with order count and amount paid                            |
 | `GET`    | `/api/v1/admin/users/:id`                             | One account with its latest orders                                                     |
 | `GET`    | `/api/v1/admin/platforms`                             | Every platform, hidden ones included                                                   |
+| `POST`   | `/api/v1/admin/platforms`                             | `{ name, slug, imageUrl, sortOrder? }`; starts hidden                                  |
+| `PATCH`  | `/api/v1/admin/platforms/:id`                         | Updates platform details or `{ published }`                                            |
+| `DELETE` | `/api/v1/admin/platforms/:id`                         | Only when no product variant uses the platform                                         |
 | `GET`    | `/api/v1/admin/product-categories`                    | Every product category                                                                 |
+| `POST`   | `/api/v1/admin/product-categories`                    | `{ name, slug, sortOrder? }`                                                           |
+| `PATCH`  | `/api/v1/admin/product-categories/:id`                | Updates a category                                                                     |
+| `DELETE` | `/api/v1/admin/product-categories/:id`                | Only when no product uses the category                                                 |
 | `GET`    | `/api/v1/admin/products`                              | `?page&limit&q&published=true\|false`; variants with stock levels                      |
 | `POST`   | `/api/v1/admin/products`                              | `{ name, slug, imageUrl, releaseDate, ... }`; starts hidden                            |
 | `GET`    | `/api/v1/admin/products/:id`                          | One product with its variants and key counts                                           |
@@ -380,6 +392,23 @@ HMAC fingerprint that stops the same code being stocked twice. In development,
 | `PATCH`  | `/api/v1/admin/banners/:id`                           | Any banner field, or `{ published }`                                                   |
 | `DELETE` | `/api/v1/admin/banners/:id`                           | Removes the banner                                                                     |
 | `GET`    | `/api/v1/admin/post-categories`                       | Every blog category                                                                    |
+| `POST`   | `/api/v1/admin/post-categories`                       | `{ name, slug, sortOrder? }`; the reserved `all` slug cannot be used                   |
+| `PATCH`  | `/api/v1/admin/post-categories/:id`                   | Updates a blog category                                                                |
+| `DELETE` | `/api/v1/admin/post-categories/:id`                   | Only when no post uses the category                                                    |
+| `GET`    | `/api/v1/admin/pages`                                 | FAQ, refund policy, terms and privacy pages                                            |
+| `PATCH`  | `/api/v1/admin/pages/:slug`                           | Updates `{ title, summary, sections, published }` for a known page                     |
+| `GET`    | `/api/v1/admin/galleries`                             | Every gallery album, including hidden ones                                             |
+| `POST`   | `/api/v1/admin/galleries`                             | Creates an album with a cover and image list                                           |
+| `PATCH`  | `/api/v1/admin/galleries/:id`                         | Updates album details or `{ published }`                                               |
+| `DELETE` | `/api/v1/admin/galleries/:id`                         | Removes an album                                                                       |
+| `GET`    | `/api/v1/admin/media`                                 | Every screenshot and video, including hidden ones                                      |
+| `POST`   | `/api/v1/admin/media`                                 | Creates a media item with type, image and target URL                                   |
+| `PATCH`  | `/api/v1/admin/media/:id`                             | Updates media details or `{ published }`                                               |
+| `DELETE` | `/api/v1/admin/media/:id`                             | Removes a media item                                                                   |
+| `GET`    | `/api/v1/admin/social-links`                          | Every footer social link                                                               |
+| `POST`   | `/api/v1/admin/social-links`                          | `{ network, label, url, sortOrder? }`; starts hidden                                   |
+| `PATCH`  | `/api/v1/admin/social-links/:id`                      | Updates link details or `{ published }`                                                |
+| `DELETE` | `/api/v1/admin/social-links/:id`                      | Removes a social link                                                                  |
 | `GET`    | `/api/v1/admin/posts`                                 | `?page&limit&q&published&categoryId`; without the body text                            |
 | `POST`   | `/api/v1/admin/posts`                                 | `{ title, slug, excerpt, content?, imageUrl, categoryId, publishedAt }`; starts hidden |
 | `GET`    | `/api/v1/admin/posts/:id`                             | One post with its body text                                                            |
@@ -391,6 +420,16 @@ HMAC fingerprint that stops the same code being stocked twice. In development,
 All of them require an admin with a verified email, like every `/admin` route.
 Responses are built field by field, so password hashes and key codes never leave
 the API through them.
+
+Automatic VNPay refunds use the configured merchant transaction API and are full
+refunds only. The payment must be owed back and have its original VNPay
+transaction number and creation date. A signed rejection is recorded as failed
+and may be retried. A timeout, invalid response, or other uncertain result is
+recorded as `unknown`; reconcile it in the VNPay merchant portal before
+retrying, to avoid a duplicate refund. The manual endpoint remains available for
+refunds already completed outside the API. Configure `VNPAY_TMN_CODE`,
+`VNPAY_HASH_SECRET` and `VNPAY_API_URL` for the intended environment; never
+expose these credentials to the shop or admin browser.
 
 Sign-in, sign-up and refresh answer `{ data: { user, accessToken } }`. The
 access token (JWT, HS256, ~15 minutes) is sent as `Authorization: Bearer` and

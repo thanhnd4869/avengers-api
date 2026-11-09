@@ -3,6 +3,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 const VERSION = '2.1.0'
 const VIETNAM_OFFSET_MS = 7 * 60 * 60 * 1000
 const QUERY_TIMEOUT_MS = 10_000
+const REFUND_TIMEOUT_MS = 15_000
 
 /** `yyyyMMddHHmmss` in Vietnam time (GMT+7), as every VNPay date is. */
 export function formatVnpayDate(date) {
@@ -215,7 +216,112 @@ export function createVnpayClient({
       return reply
     },
 
+    /**
+     * Requests a full refund for a settled transaction. VNPay's merchant API
+     * signs the fixed field sequence, rather than the payment URL query.
+     */
+    async refundTransaction({
+      requestId,
+      txnRef,
+      amount,
+      transactionNo,
+      transactionDate,
+      orderInfo,
+      createdBy,
+      ipAddr,
+      createdAt = new Date(),
+    }) {
+      const request = {
+        vnp_RequestId: requestId,
+        vnp_Version: VERSION,
+        vnp_Command: 'refund',
+        vnp_TmnCode: tmnCode,
+        vnp_TransactionType: '02',
+        vnp_TxnRef: txnRef,
+        vnp_Amount: String(amount * 100),
+        vnp_OrderInfo: plainText(orderInfo),
+        vnp_TransactionNo: transactionNo,
+        vnp_TransactionDate: formatVnpayDate(transactionDate),
+        vnp_CreateBy: plainText(createdBy).slice(0, 50),
+        vnp_CreateDate: formatVnpayDate(createdAt),
+        vnp_IpAddr: ipAddr,
+      }
+
+      request.vnp_SecureHash = hmac(
+        hashSecret,
+        [
+          request.vnp_RequestId,
+          request.vnp_Version,
+          request.vnp_Command,
+          request.vnp_TmnCode,
+          request.vnp_TxnRef,
+          request.vnp_TransactionType,
+          request.vnp_Amount,
+          request.vnp_TransactionNo,
+          request.vnp_TransactionDate,
+          request.vnp_CreateBy,
+          request.vnp_CreateDate,
+          request.vnp_IpAddr,
+          request.vnp_OrderInfo,
+        ].join('|'),
+      )
+
+      const response = await fetchImpl(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(REFUND_TIMEOUT_MS),
+      })
+
+      if (!response.ok) {
+        throw new Error(`VNPay refund answered HTTP ${response.status}`)
+      }
+
+      const reply = await response.json()
+      const expected = hmac(
+        hashSecret,
+        [
+          reply.vnp_ResponseId,
+          reply.vnp_Command,
+          reply.vnp_ResponseCode,
+          reply.vnp_Message,
+          reply.vnp_TmnCode,
+          reply.vnp_TxnRef,
+          reply.vnp_Amount,
+          reply.vnp_BankCode,
+          reply.vnp_PayDate,
+          reply.vnp_TransactionNo,
+          reply.vnp_TransactionType,
+          reply.vnp_TransactionStatus,
+          reply.vnp_OrderInfo,
+          reply.vnp_PromotionCode,
+          reply.vnp_PromotionAmount,
+        ]
+          .map((value) => value ?? '')
+          .join('|'),
+      )
+
+      if (!safeEqualHex(reply.vnp_SecureHash, expected)) {
+        throw new Error('VNPay refund reply has an invalid signature')
+      }
+
+      if (
+        reply.vnp_Command !== 'refund' ||
+        typeof reply.vnp_ResponseCode !== 'string' ||
+        !/^\d{2}$/.test(reply.vnp_ResponseCode) ||
+        reply.vnp_TmnCode !== tmnCode ||
+        reply.vnp_TxnRef !== txnRef ||
+        Number(reply.vnp_Amount) !== amount * 100 ||
+        reply.vnp_TransactionType !== '02'
+      ) {
+        throw new Error('VNPay refund reply does not match the request')
+      }
+
+      return reply
+    },
+
     // Exposed for tests that need to play VNPay's part.
     sign: (params) => hmac(hashSecret, canonicalQuery(params)),
+    createRefundRequestId: () => randomBytes(16).toString('hex'),
   }
 }

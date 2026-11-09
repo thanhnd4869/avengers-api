@@ -156,8 +156,54 @@ export function findPlatformById(platformId) {
   return Platform.findById(platformId).lean()
 }
 
+export async function createPlatform(platform) {
+  return (await Platform.create(platform)).toObject()
+}
+
+export function updatePlatform(platformId, changes) {
+  return Platform.findByIdAndUpdate(
+    platformId,
+    { $set: changes },
+    { returnDocument: 'after', runValidators: true, lean: true },
+  )
+}
+
+export async function countVariantsForPlatform(platformId) {
+  return ProductVariant.countDocuments({ platformId })
+}
+
+export async function deletePlatform(platformId) {
+  return (await Platform.deleteOne({ _id: platformId })).deletedCount === 1
+}
+
 export function findCategories() {
   return ProductCategory.find().sort({ sortOrder: 1, _id: 1 }).lean()
+}
+
+export async function createCategory(category) {
+  return (await ProductCategory.create(category)).toObject()
+}
+
+export function updateCategory(categoryId, changes) {
+  return ProductCategory.findByIdAndUpdate(
+    categoryId,
+    { $set: changes },
+    { returnDocument: 'after', runValidators: true, lean: true },
+  )
+}
+
+export function findCategoryById(categoryId) {
+  return ProductCategory.findById(categoryId).lean()
+}
+
+export function countProductsForCategory(categoryId) {
+  return Product.countDocuments({ categoryIds: categoryId })
+}
+
+export async function deleteCategory(categoryId) {
+  return (
+    (await ProductCategory.deleteOne({ _id: categoryId })).deletedCount === 1
+  )
 }
 
 export function countCategories(categoryIds) {

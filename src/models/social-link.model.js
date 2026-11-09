@@ -9,6 +9,7 @@ const socialLinkSchema = new mongoose.Schema(
     label: { type: String, required: true },
     url: { type: String, required: true },
     sortOrder: { type: Number, default: 0 },
+    published: { type: Boolean, default: true },
   },
   { timestamps: true, collection: 'social_links' },
 )

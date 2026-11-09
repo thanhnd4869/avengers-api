@@ -1,4 +1,9 @@
-import { ORDER_STATUS, PAYMENT_STATUS } from '#constants/order.js'
+import {
+  ORDER_STATUS,
+  PAYMENT_PROVIDER,
+  PAYMENT_REFUND_STATUS,
+  PAYMENT_STATUS,
+} from '#constants/order.js'
 import { ContactMessage } from '#models/contact-message.model.js'
 import { Order } from '#models/order.model.js'
 import { Payment } from '#models/payment.model.js'
@@ -182,8 +187,150 @@ export function markPaymentRefunded({ paymentId, adminId, note, at }) {
       _id: paymentId,
       status: PAYMENT_STATUS.REFUND_REQUIRED,
       refundedAt: null,
+      refundStatus: {
+        $nin: [
+          PAYMENT_REFUND_STATUS.PROCESSING,
+          PAYMENT_REFUND_STATUS.SUCCEEDED,
+        ],
+      },
     },
-    { $set: { refundedAt: at, refundedBy: adminId, refundNote: note } },
+    {
+      $set: {
+        refundStatus: PAYMENT_REFUND_STATUS.SUCCEEDED,
+        refundMethod: 'manual',
+        refundedAt: at,
+        refundedBy: adminId,
+        refundNote: note,
+        refundError: null,
+      },
+      $push: {
+        refundAttempts: {
+          method: 'manual',
+          status: PAYMENT_REFUND_STATUS.SUCCEEDED,
+          attemptedAt: at,
+          adminId,
+          note,
+        },
+      },
+    },
+    { returnDocument: 'after', lean: true },
+  )
+}
+
+export function beginVnpayRefund({ paymentId, adminId, requestId, note, at }) {
+  return Payment.findOneAndUpdate(
+    {
+      _id: paymentId,
+      provider: PAYMENT_PROVIDER.VNPAY,
+      status: PAYMENT_STATUS.REFUND_REQUIRED,
+      refundedAt: null,
+      $or: [
+        {
+          refundStatus: {
+            $in: [PAYMENT_REFUND_STATUS.NONE, PAYMENT_REFUND_STATUS.FAILED],
+          },
+        },
+        { refundStatus: { $exists: false } },
+      ],
+    },
+    {
+      $set: {
+        refundStatus: PAYMENT_REFUND_STATUS.PROCESSING,
+        refundMethod: 'vnpay',
+        refundRequestId: requestId,
+        refundAttemptedAt: at,
+        refundResponseCode: null,
+        refundError: null,
+        refundedBy: adminId,
+        refundNote: note,
+      },
+      $push: {
+        refundAttempts: {
+          requestId,
+          method: 'vnpay',
+          status: PAYMENT_REFUND_STATUS.PROCESSING,
+          attemptedAt: at,
+          adminId,
+          note,
+        },
+      },
+    },
+    { returnDocument: 'after', lean: true },
+  )
+}
+
+export function finishVnpayRefund({
+  paymentId,
+  requestId,
+  responseCode,
+  refundTransactionNo,
+  at,
+}) {
+  return Payment.findOneAndUpdate(
+    {
+      _id: paymentId,
+      refundStatus: PAYMENT_REFUND_STATUS.PROCESSING,
+      refundRequestId: requestId,
+      'refundAttempts.requestId': requestId,
+      refundedAt: null,
+    },
+    {
+      $set: {
+        refundStatus: PAYMENT_REFUND_STATUS.SUCCEEDED,
+        refundResponseCode: responseCode,
+        refundProviderTransactionNo: refundTransactionNo || null,
+        refundedAt: at,
+        refundError: null,
+        'refundAttempts.$.status': PAYMENT_REFUND_STATUS.SUCCEEDED,
+        'refundAttempts.$.responseCode': responseCode,
+        'refundAttempts.$.providerTransactionNo': refundTransactionNo || null,
+        'refundAttempts.$.error': null,
+      },
+    },
+    { returnDocument: 'after', lean: true },
+  )
+}
+
+export function failVnpayRefund({ paymentId, requestId, responseCode, error }) {
+  return Payment.findOneAndUpdate(
+    {
+      _id: paymentId,
+      refundStatus: PAYMENT_REFUND_STATUS.PROCESSING,
+      refundRequestId: requestId,
+      'refundAttempts.requestId': requestId,
+      refundedAt: null,
+    },
+    {
+      $set: {
+        refundStatus: PAYMENT_REFUND_STATUS.FAILED,
+        refundResponseCode: responseCode,
+        refundError: error,
+        'refundAttempts.$.status': PAYMENT_REFUND_STATUS.FAILED,
+        'refundAttempts.$.responseCode': responseCode,
+        'refundAttempts.$.error': error,
+      },
+    },
+    { returnDocument: 'after', lean: true },
+  )
+}
+
+export function markVnpayRefundUnknown({ paymentId, requestId, error }) {
+  return Payment.findOneAndUpdate(
+    {
+      _id: paymentId,
+      refundStatus: PAYMENT_REFUND_STATUS.PROCESSING,
+      refundRequestId: requestId,
+      'refundAttempts.requestId': requestId,
+      refundedAt: null,
+    },
+    {
+      $set: {
+        refundStatus: PAYMENT_REFUND_STATUS.UNKNOWN,
+        refundError: error,
+        'refundAttempts.$.status': PAYMENT_REFUND_STATUS.UNKNOWN,
+        'refundAttempts.$.error': error,
+      },
+    },
     { returnDocument: 'after', lean: true },
   )
 }

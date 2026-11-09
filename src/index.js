@@ -180,10 +180,11 @@ const orderService = createOrderService({
   logger,
 })
 const orderController = createOrderController({ orderService })
+const vnpay = environment.vnpay ? createVnpayClient(environment.vnpay) : null
 const paymentService = createPaymentService({
   orderRepository,
   cartService,
-  vnpay: environment.vnpay ? createVnpayClient(environment.vnpay) : null,
+  vnpay,
   keyCipher,
   userRepository,
   mailer,
@@ -275,7 +276,7 @@ const auth = createAuthMiddlewares({
   resolveAccessToken: authService.authenticateAccessToken,
 })
 const adminController = createAdminController({
-  adminService: createAdminService({ adminRepository }),
+  adminService: createAdminService({ adminRepository, vnpay, logger }),
 })
 const adminCatalogueController = createAdminCatalogueController({
   adminCatalogueService: createAdminCatalogueService({

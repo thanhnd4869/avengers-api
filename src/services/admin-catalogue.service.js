@@ -12,6 +12,10 @@ import {
   validateProductBody,
   validateVariantBody,
 } from '#validations/admin-catalogue.validation.js'
+import {
+  validatePlatformBody,
+  validateTaxonomyBody,
+} from '#validations/admin-cms.validation.js'
 import { toPaginatedResponse } from './pagination.js'
 
 const EMPTY_KEY_COUNTS = Object.freeze({
@@ -84,6 +88,33 @@ function variantExists() {
       ],
     },
   )
+}
+
+function slugConflict(resource) {
+  return new ConflictError(`Another ${resource} already uses that slug.`, {
+    code: ERROR_CODE.SLUG_TAKEN,
+    details: [{ field: 'slug', message: 'This slug is already in use.' }],
+  })
+}
+
+function toAdminPlatform(platform) {
+  return {
+    id: String(platform._id),
+    name: platform.name,
+    slug: platform.slug,
+    image: platform.image,
+    sortOrder: platform.sortOrder,
+    published: platform.published,
+  }
+}
+
+function toAdminCategory(category) {
+  return {
+    id: String(category._id),
+    name: category.name,
+    slug: category.slug,
+    sortOrder: category.sortOrder,
+  }
 }
 
 export function createAdminCatalogueService({
@@ -362,25 +393,110 @@ export function createAdminCatalogueService({
     async listPlatforms() {
       const platforms = await repository.findPlatforms()
 
-      return {
-        data: platforms.map((platform) => ({
-          id: String(platform._id),
-          name: platform.name,
-          slug: platform.slug,
-          published: platform.published,
-        })),
+      return { data: platforms.map(toAdminPlatform) }
+    },
+
+    async createPlatform(body) {
+      try {
+        const input = validatePlatformBody(body)
+        return {
+          data: toAdminPlatform(
+            await repository.createPlatform({
+              ...input,
+              published: input.published ?? false,
+            }),
+          ),
+        }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw slugConflict('platform')
+        }
+        throw error
+      }
+    },
+
+    async updatePlatform(rawId, body) {
+      const id = validateId(rawId)
+      try {
+        const platform = await repository.updatePlatform(
+          id,
+          validatePlatformBody(body, { partial: true }),
+        )
+        if (!platform) throw new NotFoundError('Platform not found.')
+        return { data: toAdminPlatform(platform) }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw slugConflict('platform')
+        }
+        throw error
+      }
+    },
+
+    async deletePlatform(rawId) {
+      const id = validateId(rawId)
+      if (!(await repository.findPlatformById(id))) {
+        throw new NotFoundError('Platform not found.')
+      }
+      if (await repository.countVariantsForPlatform(id)) {
+        throw new ConflictError(
+          'This platform is used by product variants. Move those variants before deleting it.',
+        )
+      }
+      if (!(await repository.deletePlatform(id))) {
+        throw new NotFoundError('Platform not found.')
       }
     },
 
     async listCategories() {
       const categories = await repository.findCategories()
 
-      return {
-        data: categories.map((category) => ({
-          id: String(category._id),
-          name: category.name,
-          slug: category.slug,
-        })),
+      return { data: categories.map(toAdminCategory) }
+    },
+
+    async createCategory(body) {
+      try {
+        return {
+          data: toAdminCategory(
+            await repository.createCategory(validateTaxonomyBody(body)),
+          ),
+        }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw slugConflict('category')
+        }
+        throw error
+      }
+    },
+
+    async updateCategory(rawId, body) {
+      const id = validateId(rawId)
+      try {
+        const category = await repository.updateCategory(
+          id,
+          validateTaxonomyBody(body, { partial: true }),
+        )
+        if (!category) throw new NotFoundError('Category not found.')
+        return { data: toAdminCategory(category) }
+      } catch (error) {
+        if (repository.isDuplicateKeyError(error)) {
+          throw slugConflict('category')
+        }
+        throw error
+      }
+    },
+
+    async deleteCategory(rawId) {
+      const id = validateId(rawId)
+      if (!(await repository.findCategoryById(id))) {
+        throw new NotFoundError('Category not found.')
+      }
+      if (await repository.countProductsForCategory(id)) {
+        throw new ConflictError(
+          'This category is used by products. Remove it from those products before deleting it.',
+        )
+      }
+      if (!(await repository.deleteCategory(id))) {
+        throw new NotFoundError('Category not found.')
       }
     },
   }
