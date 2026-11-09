@@ -119,6 +119,7 @@ function toAdminCategory(category) {
 
 export function createAdminCatalogueService({
   adminCatalogueRepository: repository,
+  adminUploadService,
   keyCipher,
   logger,
 }) {
@@ -239,9 +240,12 @@ export function createAdminCatalogueService({
       await checkCategories(changes.categoryIds)
 
       try {
+        const before = await repository.findProductById(id)
         const product = await repository.updateProduct(id, changes)
 
         if (!product) throw new NotFoundError('Product not found.')
+
+        await adminUploadService.releaseReplaced(before, product)
 
         return { data: await present(product) }
       } catch (error) {
@@ -418,11 +422,11 @@ export function createAdminCatalogueService({
     async updatePlatform(rawId, body) {
       const id = validateId(rawId)
       try {
-        const platform = await repository.updatePlatform(
-          id,
-          validatePlatformBody(body, { partial: true }),
-        )
+        const changes = validatePlatformBody(body, { partial: true })
+        const before = await repository.findPlatformById(id)
+        const platform = await repository.updatePlatform(id, changes)
         if (!platform) throw new NotFoundError('Platform not found.')
+        await adminUploadService.releaseReplaced(before, platform)
         return { data: toAdminPlatform(platform) }
       } catch (error) {
         if (repository.isDuplicateKeyError(error)) {
@@ -434,7 +438,8 @@ export function createAdminCatalogueService({
 
     async deletePlatform(rawId) {
       const id = validateId(rawId)
-      if (!(await repository.findPlatformById(id))) {
+      const platform = await repository.findPlatformById(id)
+      if (!platform) {
         throw new NotFoundError('Platform not found.')
       }
       if (await repository.countVariantsForPlatform(id)) {
@@ -445,6 +450,7 @@ export function createAdminCatalogueService({
       if (!(await repository.deletePlatform(id))) {
         throw new NotFoundError('Platform not found.')
       }
+      await adminUploadService.releaseReplaced(platform, null)
     },
 
     async listCategories() {

@@ -31,6 +31,10 @@ export function findBanners() {
   return Banner.find().sort({ sortOrder: 1, _id: 1 }).lean()
 }
 
+export function findBannerById(bannerId) {
+  return Banner.findById(bannerId).lean()
+}
+
 export async function createBanner(banner) {
   return (await Banner.create(banner)).toObject()
 }
@@ -152,6 +156,10 @@ export function findGalleries() {
   return Gallery.find().sort({ sortOrder: 1, _id: 1 }).lean()
 }
 
+export function findGalleryById(galleryId) {
+  return Gallery.findById(galleryId).lean()
+}
+
 export async function createGallery(gallery) {
   return (await Gallery.create(gallery)).toObject()
 }
@@ -167,6 +175,10 @@ export async function deleteGallery(galleryId) {
 // Individual media entries.
 export function findMedia() {
   return Media.find().sort({ sortOrder: 1, _id: 1 }).lean()
+}
+
+export function findMediaById(mediaId) {
+  return Media.findById(mediaId).lean()
 }
 
 export async function createMedia(media) {

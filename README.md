@@ -143,6 +143,9 @@ The API is available at `http://localhost:8000` by default.
 | `ORDER_SWEEP_INTERVAL_SECONDS`        | `30`                            | How often expired orders are closed and their keys put back on sale         |
 | `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET` | empty                           | VNPay terminal code and secret; payment is offered only when both are set   |
 | `VNPAY_PAY_URL`, `VNPAY_API_URL`      | VNPay sandbox                   | Payment page and transaction API; set to VNPay's production URLs to go live |
+| `CLOUDINARY_CLOUD_NAME`               | empty                           | Cloudinary cloud; admin uploads are offered only when the next two are set  |
+| `CLOUDINARY_API_KEY`, `..._SECRET`    | empty                           | Cloudinary API key and secret; the secret never leaves the API              |
+| `CLOUDINARY_FOLDER`                   | `avengers`                      | Folder every upload lands in; only files inside it are ever deleted         |
 
 `MONGODB_URI`, `REDIS_URL`, `JWT_SECRET` and `KEY_ENCRYPTION_KEY` are required.
 Generate a secret with
@@ -416,6 +419,8 @@ HMAC fingerprint that stops the same code being stocked twice. In development,
 | `DELETE` | `/api/v1/admin/posts/:id`                             | Removes the post and all its comments                                                  |
 | `GET`    | `/api/v1/admin/comments`                              | `?page&limit&q&postId`; newest first across every post                                 |
 | `DELETE` | `/api/v1/admin/comments/:id`                          | Takes a comment down, as if its author had deleted it                                  |
+| `GET`    | `/api/v1/admin/uploads`                               | `{ enabled }`: whether Cloudinary uploads are configured                               |
+| `POST`   | `/api/v1/admin/uploads/signature`                     | `{ resourceType: image\|video }`; a signed Cloudinary upload, valid for one hour       |
 
 All of them require an admin with a verified email, like every `/admin` route.
 Responses are built field by field, so password hashes and key codes never leave
@@ -430,6 +435,17 @@ retrying, to avoid a duplicate refund. The manual endpoint remains available for
 refunds already completed outside the API. Configure `VNPAY_TMN_CODE`,
 `VNPAY_HASH_SECRET` and `VNPAY_API_URL` for the intended environment; never
 expose these credentials to the shop or admin browser.
+
+Images and videos are either third-party URLs pasted by an admin or files the
+admin uploads to Cloudinary. Uploads go straight from the browser to Cloudinary
+with a signature from `/admin/uploads/signature`, so files never pass through
+the API and the secret stays on the server; the signature fixes the folder and
+the allowed formats (images: jpg, png, webp, gif, avif; videos: mp4, webm, mov).
+Either way only the delivery URL is stored. When an edit or a delete leaves an
+uploaded file unused by every product, order, banner, post, gallery, media item
+and platform, the API deletes it from Cloudinary and purges the CDN copy.
+Third-party URLs and files outside `CLOUDINARY_FOLDER` are never touched, and a
+failed delete is only logged.
 
 Sign-in, sign-up and refresh answer `{ data: { user, accessToken } }`. The
 access token (JWT, HS256, ~15 minutes) is sent as `Authorization: Bearer` and

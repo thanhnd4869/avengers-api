@@ -138,8 +138,32 @@ function slugTaken() {
  */
 export function createAdminContentService({
   adminContentRepository: repository,
+  adminUploadService,
   logger,
 }) {
+  /**
+   * Runs a write that answers the document after it, and lets go of the
+   * uploads the document showed before but no longer does.
+   */
+  async function replacing(findBefore, write) {
+    const before = await findBefore()
+    const after = await write()
+
+    if (after) await adminUploadService.releaseReplaced(before, after)
+
+    return after
+  }
+
+  /** Runs a delete that answers whether it removed the document. */
+  async function removing(findBefore, remove) {
+    const before = await findBefore()
+    const removed = await remove()
+
+    if (removed) await adminUploadService.releaseReplaced(before, null)
+
+    return removed
+  }
+
   async function checkCategory(categoryId) {
     if (categoryId && !(await repository.findPostCategoryById(categoryId))) {
       throw new ValidationError('That category does not exist.', {
@@ -197,9 +221,10 @@ export function createAdminContentService({
 
     async updateBanner(rawId, body) {
       const id = validateId(rawId)
-      const banner = await repository.updateBanner(
-        id,
-        validateBannerBody(body, { partial: true }),
+      const changes = validateBannerBody(body, { partial: true })
+      const banner = await replacing(
+        () => repository.findBannerById(id),
+        () => repository.updateBanner(id, changes),
       )
 
       if (!banner) throw new NotFoundError('Banner not found.')
@@ -208,7 +233,14 @@ export function createAdminContentService({
     },
 
     async deleteBanner(rawId) {
-      if (!(await repository.deleteBanner(validateId(rawId)))) {
+      const id = validateId(rawId)
+
+      if (
+        !(await removing(
+          () => repository.findBannerById(id),
+          () => repository.deleteBanner(id),
+        ))
+      ) {
         throw new NotFoundError('Banner not found.')
       }
     },
@@ -248,13 +280,23 @@ export function createAdminContentService({
 
       await checkCategory(changes.categoryId)
 
-      return savePost(() => repository.updatePost(id, changes))
+      return savePost(() =>
+        replacing(
+          () => repository.findPostById(id),
+          () => repository.updatePost(id, changes),
+        ),
+      )
     },
 
     async deletePost(rawId, { adminId }) {
       const id = validateId(rawId)
 
-      if (!(await repository.deletePost(id))) {
+      if (
+        !(await removing(
+          () => repository.findPostById(id),
+          () => repository.deletePost(id),
+        ))
+      ) {
         throw new NotFoundError('Post not found.')
       }
 
@@ -369,11 +411,12 @@ export function createAdminContentService({
 
     async updateGallery(rawId, body) {
       const id = validateId(rawId)
+      const changes = validateGalleryBody(body, { partial: true })
       return saveCmsItem(
         () =>
-          repository.updateGallery(
-            id,
-            validateGalleryBody(body, { partial: true }),
+          replacing(
+            () => repository.findGalleryById(id),
+            () => repository.updateGallery(id, changes),
           ),
         toAdminGallery,
         'Gallery',
@@ -381,7 +424,14 @@ export function createAdminContentService({
     },
 
     async deleteGallery(rawId) {
-      if (!(await repository.deleteGallery(validateId(rawId)))) {
+      const id = validateId(rawId)
+
+      if (
+        !(await removing(
+          () => repository.findGalleryById(id),
+          () => repository.deleteGallery(id),
+        ))
+      ) {
         throw new NotFoundError('Gallery not found.')
       }
     },
@@ -401,16 +451,24 @@ export function createAdminContentService({
 
     async updateMedia(rawId, body) {
       const id = validateId(rawId)
-      const media = await repository.updateMedia(
-        id,
-        validateMediaBody(body, { partial: true }),
+      const changes = validateMediaBody(body, { partial: true })
+      const media = await replacing(
+        () => repository.findMediaById(id),
+        () => repository.updateMedia(id, changes),
       )
       if (!media) throw new NotFoundError('Media item not found.')
       return { data: toAdminMedia(media) }
     },
 
     async deleteMedia(rawId) {
-      if (!(await repository.deleteMedia(validateId(rawId)))) {
+      const id = validateId(rawId)
+
+      if (
+        !(await removing(
+          () => repository.findMediaById(id),
+          () => repository.deleteMedia(id),
+        ))
+      ) {
         throw new NotFoundError('Media item not found.')
       }
     },

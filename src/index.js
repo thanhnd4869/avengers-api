@@ -12,6 +12,7 @@ import { createAdminController } from '#controllers/admin.controller.js'
 import { createAdminCatalogueController } from '#controllers/admin-catalogue.controller.js'
 import { createAdminContentController } from '#controllers/admin-content.controller.js'
 import { createAdminContactMessageController } from '#controllers/admin-contact-message.controller.js'
+import { createAdminUploadController } from '#controllers/admin-upload.controller.js'
 import { createAuthController } from '#controllers/auth.controller.js'
 import { createContactMessageController } from '#controllers/contact-message.controller.js'
 import { createHealthController } from '#controllers/health.controller.js'
@@ -43,6 +44,7 @@ import {
 } from '#repositories/health.repository.js'
 import * as galleryRepository from '#repositories/gallery.repository.js'
 import * as mediaRepository from '#repositories/media.repository.js'
+import * as mediaAssetRepository from '#repositories/media-asset.repository.js'
 import * as orderRepository from '#repositories/order.repository.js'
 import * as pageRepository from '#repositories/page.repository.js'
 import * as platformRepository from '#repositories/platform.repository.js'
@@ -63,6 +65,7 @@ import { createAdminService } from '#services/admin.service.js'
 import { createAdminCatalogueService } from '#services/admin-catalogue.service.js'
 import { createAdminContentService } from '#services/admin-content.service.js'
 import { createAdminContactMessageService } from '#services/admin-contact-message.service.js'
+import { createAdminUploadService } from '#services/admin-upload.service.js'
 import { createAuthService } from '#services/auth.service.js'
 import { createBannerService } from '#services/banner.service.js'
 import { createCartService } from '#services/cart.service.js'
@@ -83,6 +86,7 @@ import { createPostService } from '#services/post.service.js'
 import { createProductService } from '#services/product.service.js'
 import { createReviewService } from '#services/review.service.js'
 import { createSocialLinkService } from '#services/social-link.service.js'
+import { createCloudinaryClient } from '#utils/cloudinary.js'
 import { createAccessTokenSigner } from '#utils/jwt.js'
 import { createKeyCipher } from '#utils/key-cipher.js'
 import { createMailer } from '#utils/mailer.js'
@@ -278,9 +282,22 @@ const auth = createAuthMiddlewares({
 const adminController = createAdminController({
   adminService: createAdminService({ adminRepository, vnpay, logger }),
 })
+const adminUploadService = createAdminUploadService({
+  cloudinary: environment.cloudinary
+    ? createCloudinaryClient(environment.cloudinary)
+    : null,
+  mediaAssetRepository,
+  logger,
+})
+
+if (!adminUploadService.isEnabled()) {
+  logger.info('Uploading files is off: no Cloudinary credentials set')
+}
+
 const adminCatalogueController = createAdminCatalogueController({
   adminCatalogueService: createAdminCatalogueService({
     adminCatalogueRepository,
+    adminUploadService,
     keyCipher,
     logger,
   }),
@@ -288,8 +305,12 @@ const adminCatalogueController = createAdminCatalogueController({
 const adminContentController = createAdminContentController({
   adminContentService: createAdminContentService({
     adminContentRepository,
+    adminUploadService,
     logger,
   }),
+})
+const adminUploadController = createAdminUploadController({
+  adminUploadService,
 })
 const adminContactMessageController = createAdminContactMessageController({
   adminContactMessageService: createAdminContactMessageService({
@@ -321,6 +342,7 @@ const app = createApp({
     adminCatalogueController,
     adminContentController,
     adminContactMessageController,
+    adminUploadController,
     auth,
     authRateLimits: createAuthRateLimits({
       isProduction: environment.isProduction,

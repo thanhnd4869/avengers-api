@@ -11,6 +11,7 @@ export function createAdminRouter({
   adminCatalogueController,
   adminContentController,
   adminContactMessageController,
+  adminUploadController,
 }) {
   const router = Router()
 
@@ -82,6 +83,9 @@ export function createAdminRouter({
   router.delete('/posts/:id', content.deletePost)
   router.get('/comments', content.listComments)
   router.delete('/comments/:id', content.deleteComment)
+
+  router.get('/uploads', adminUploadController.getUploadConfig)
+  router.post('/uploads/signature', adminUploadController.createUploadSignature)
 
   router.get(
     '/contact-messages',

@@ -131,6 +131,35 @@ function readVnpay(source) {
   })
 }
 
+const CLOUDINARY_FOLDER_PATTERN = /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/
+
+/**
+ * Uploading from the admin is offered only when the cloud name, key and
+ * secret are all set. Every upload lands under `folder`, which is also how
+ * the API tells its own assets apart from any other in the same cloud.
+ */
+function readCloudinary(source) {
+  const cloudName = readString(source, 'CLOUDINARY_CLOUD_NAME', '')
+  const apiKey = readString(source, 'CLOUDINARY_API_KEY', '')
+  const apiSecret = readString(source, 'CLOUDINARY_API_SECRET', '')
+
+  if (!cloudName || !apiKey || !apiSecret) return null
+
+  const folder = readString(source, 'CLOUDINARY_FOLDER', 'avengers')
+
+  // Segments like `v123` would be read as the version part of delivery URLs.
+  if (
+    !CLOUDINARY_FOLDER_PATTERN.test(folder) ||
+    folder.split('/').some((segment) => /^v\d+$/.test(segment))
+  ) {
+    throw new RangeError(
+      'CLOUDINARY_FOLDER must be letters, digits, "_" or "-" segments joined by "/"',
+    )
+  }
+
+  return Object.freeze({ cloudName, apiKey, apiSecret, folder })
+}
+
 function readPositiveInteger(source, key, fallback) {
   const value = Number(readString(source, key, String(fallback)))
 
@@ -241,6 +270,7 @@ export function getEnvironment(source = process.env) {
     mailFrom: readString(source, 'MAIL_FROM', 'Avengers <no-reply@localhost>'),
     keyEncryptionKey: readKeyEncryptionKey(source),
     vnpay: readVnpay(source),
+    cloudinary: readCloudinary(source),
     orders: Object.freeze({
       // How long keys are held while the shopper pays.
       holdMinutes: readPositiveInteger(source, 'ORDER_HOLD_MINUTES', 10),

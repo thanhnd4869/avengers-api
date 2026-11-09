@@ -45,6 +45,7 @@ export function createRouter({
   adminCatalogueController,
   adminContentController,
   adminContactMessageController,
+  adminUploadController,
   auth,
   authRateLimits,
 }) {
@@ -67,6 +68,7 @@ export function createRouter({
       adminCatalogueController,
       adminContentController,
       adminContactMessageController,
+      adminUploadController,
     }),
   )
 
