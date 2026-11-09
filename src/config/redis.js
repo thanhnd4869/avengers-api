@@ -66,14 +66,6 @@ export async function connectRedis({ redisUrl, logger }) {
   return client
 }
 
-export function getRedis() {
-  if (!client) {
-    throw new Error('Redis is not connected')
-  }
-
-  return client
-}
-
 /** A rate-limit counter store under `prefix`, on the shared connection. */
 export function createRateLimitStore(redis, prefix) {
   return new RedisStore({

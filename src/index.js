@@ -29,6 +29,7 @@ import { createPostCommentController } from '#controllers/post-comment.controlle
 import { createPostController } from '#controllers/post.controller.js'
 import { createProductController } from '#controllers/product.controller.js'
 import { createReviewController } from '#controllers/review.controller.js'
+import { createSitemapController } from '#controllers/sitemap.controller.js'
 import { createSocialLinkController } from '#controllers/social-link.controller.js'
 import { createAuthMiddlewares } from '#middlewares/auth.middleware.js'
 import { createAuthRateLimits } from '#middlewares/infrastructure.middleware.js'
@@ -55,6 +56,7 @@ import * as productRepository from '#repositories/product.repository.js'
 import * as reviewRepository from '#repositories/review.repository.js'
 import { createRedisKeys } from '#repositories/redis-keys.js'
 import { createSessionRepository } from '#repositories/session.repository.js'
+import * as sitemapRepository from '#repositories/sitemap.repository.js'
 import * as socialLinkRepository from '#repositories/social-link.repository.js'
 import * as userIdentityRepository from '#repositories/user-identity.repository.js'
 import { createUserTokenRepository } from '#repositories/user-token.repository.js'
@@ -85,6 +87,7 @@ import { createPostCommentService } from '#services/post-comment.service.js'
 import { createPostService } from '#services/post.service.js'
 import { createProductService } from '#services/product.service.js'
 import { createReviewService } from '#services/review.service.js'
+import { createSitemapService } from '#services/sitemap.service.js'
 import { createSocialLinkService } from '#services/social-link.service.js'
 import { createCloudinaryClient } from '#utils/cloudinary.js'
 import { createAccessTokenSigner } from '#utils/jwt.js'
@@ -223,6 +226,12 @@ const mediaController = createMediaController({
 const galleryController = createGalleryController({
   galleryService: createGalleryService({ galleryRepository }),
 })
+const sitemapController = createSitemapController({
+  sitemapService: createSitemapService({
+    sitemapRepository,
+    appUrl: environment.appUrl,
+  }),
+})
 const socialLinkController = createSocialLinkController({
   socialLinkService: createSocialLinkService({ socialLinkRepository }),
 })
@@ -335,6 +344,7 @@ const app = createApp({
     mediaController,
     galleryController,
     socialLinkController,
+    sitemapController,
     contactMessageController,
     authController,
     oauthController,

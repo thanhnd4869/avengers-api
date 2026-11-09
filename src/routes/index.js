@@ -20,6 +20,7 @@ import {
   createProductCategoryRouter,
   createProductRouter,
 } from './product.routes.js'
+import { createSitemapRouter } from './sitemap.routes.js'
 import { createSocialLinkRouter } from './social-link.routes.js'
 
 export function createRouter({
@@ -38,6 +39,7 @@ export function createRouter({
   mediaController,
   galleryController,
   socialLinkController,
+  sitemapController,
   contactMessageController,
   authController,
   oauthController,
@@ -118,6 +120,7 @@ export function createRouter({
   router.use('/media', createMediaRouter({ mediaController }))
   router.use('/galleries', createGalleryRouter({ galleryController }))
   router.use('/social-links', createSocialLinkRouter({ socialLinkController }))
+  router.use('/sitemap.xml', createSitemapRouter({ sitemapController }))
   router.use(
     '/contact',
     createContactMessageRouter({ contactMessageController }),

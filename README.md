@@ -196,6 +196,11 @@ checks poll a fixed path and must never be throttled into a false negative.
 | `GET`  | `/api/v1/pages/:slug` | `faq`, `refund-policy`, `terms` or `privacy`: title, summary, sections |
 | `GET`  | `/api/v1/media`       | `?type=screenshot\|video&limit` (max 50); videos carry a `title`       |
 | `GET`  | `/api/v1/galleries`   | `?limit` (default 6, max 24); albums with a `cover` and their `images` |
+| `GET`  | `/api/v1/sitemap.xml` | XML sitemap of the shop's public pages, games and posts, on `APP_URL`  |
+
+The sitemap is rebuilt at most once an hour and lists the shop's fixed pages
+plus every published game and post. The shop's `robots.txt` points crawlers at
+it.
 
 Post bodies and page sections are plain text: blocks are separated by a blank
 line, and a block starting with `### ` is a subheading. Pages live in the

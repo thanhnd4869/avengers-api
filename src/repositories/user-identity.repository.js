@@ -30,10 +30,6 @@ export function deleteIdentityById(identityId) {
   return UserIdentity.deleteOne({ _id: identityId })
 }
 
-export function deleteUserIdentity({ userId, provider }) {
-  return UserIdentity.deleteOne({ userId, provider })
-}
-
 export function deleteUserIdentities(userId) {
   return UserIdentity.deleteMany({ userId })
 }

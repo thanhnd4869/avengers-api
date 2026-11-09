@@ -67,10 +67,6 @@ export async function findThreads({ postId, page, limit }) {
   return { threads, replies, total }
 }
 
-export function findComment(commentId) {
-  return PostComment.findById(commentId).lean()
-}
-
 /**
  * Adds a comment. A reply to a reply joins the same thread. Answers `null`
  * when the comment being answered is gone or deleted.
